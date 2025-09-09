@@ -1,0 +1,6 @@
+https://gayerie.dev/epsi-b3-orm/javaee_orm/jpa_entites.html
+    -->Explains what is a Java Entity.
+https://dzone.com/articles/spring-boot-entity-scan
+    -->Show a very basic entity code.
+https://stackoverflow.com/questions/15598210/the-import-javax-persistence-cannot-be-resolved
+    --Helped me resolve package import errors
