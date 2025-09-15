@@ -1,0 +1,4 @@
+-Lombok permet d'automatiser des tâches importantes notamment pour les entités.
+Elle permet de générer des constructeurs avec/sans attributs, des getters et setters, ce qui permet de perdre moins de temps
+en écrivant 50 lignes de getters/setters.
+Très utilisé dans le monde du travail, gardant un code moins difficile à lire et moins long,
