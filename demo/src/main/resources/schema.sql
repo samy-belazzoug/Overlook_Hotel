@@ -1,8 +1,6 @@
-
-
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE -- CLIENT, EMPLOYE, MANAGER, ADMIN
+    name VARCHAR(50) NOT NULL UNIQUE -- CLIENT, EMPLOYEE, MANAGER, ADMIN
 );
 
 CREATE TABLE users (
@@ -23,12 +21,12 @@ CREATE TABLE user_roles (
     CONSTRAINT fk_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
-CREATE TABLE chambres (
+CREATE TABLE rooms (
     id SERIAL PRIMARY KEY,
-    numero VARCHAR(20) NOT NULL,
+    number VARCHAR(20) NOT NULL,
     type VARCHAR(50) NOT NULL, -- simple, double, suite
-    prix DECIMAL(10,2) NOT NULL,
-    etat VARCHAR(50) DEFAULT 'disponible' -- disponible, occupée, nettoyage
+    price DECIMAL(10,2) NOT NULL,
+    status VARCHAR(50) DEFAULT 'available' -- available, occupied, cleaning, maintenance
 );
 
 CREATE TABLE reservations (
@@ -39,7 +37,7 @@ CREATE TABLE reservations (
     client_id INT NOT NULL,
     chambre_id INT NOT NULL,
     CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES users(id),
-    CONSTRAINT fk_chambre FOREIGN KEY (chambre_id) REFERENCES chambres(id)
+    CONSTRAINT fk_chambre FOREIGN KEY (chambre_id) REFERENCES rooms(id)
 );
 
 CREATE TABLE feedbacks (
@@ -51,7 +49,7 @@ CREATE TABLE feedbacks (
     CONSTRAINT fk_feedback_client FOREIGN KEY (client_id) REFERENCES users(id)
 );
 
-CREATE TABLE evenements (
+CREATE TABLE events (
     id SERIAL PRIMARY KEY,
     titre VARCHAR(100) NOT NULL,
     description TEXT,
@@ -69,45 +67,10 @@ CREATE TABLE notifications (
     CONSTRAINT fk_notification_user FOREIGN KEY (destinataire_id) REFERENCES users(id)
 );
 
-CREATE TABLE horaires_employes (
+CREATE TABLE worker_shifts (
     id SERIAL PRIMARY KEY,
-    employe_id INT NOT NULL,
+    worker_id INT NOT NULL,
     date DATE NOT NULL,
     shift VARCHAR(50), -- matin, soir, nuit
-    CONSTRAINT fk_employe FOREIGN KEY (employe_id) REFERENCES users(id)
+    CONSTRAINT fk_worker FOREIGN KEY (worker_id) REFERENCES users(id)
 );
-
-
-
-INSERT INTO roles (name) VALUES ('CLIENT'), ('EMPLOYE'), ('MANAGER'), ('ADMIN');
-
-INSERT INTO users (username, email, password, telephone, points_fidelite) 
-VALUES 
-('client1', 'client1@mail.com', 'password123', '0600000001', 10),
-('manager1', 'manager1@mail.com', 'password123', '0600000002', 0),
-('employe1', 'employe1@mail.com', 'password123', '0600000003', 0);
-
-INSERT INTO user_roles (user_id, role_id) VALUES
-(1, 1), -- client1 est CLIENT
-(2, 3), -- manager1 est MANAGER
-(3, 2); -- employe1 est EMPLOYE
-
-INSERT INTO chambres (numero, type, prix, etat) VALUES
-('101', 'simple', 50.00, 'disponible'),
-('102', 'double', 80.00, 'disponible'),
-('201', 'suite', 150.00, 'en nettoyage');
-
-INSERT INTO reservations (date_debut, date_fin, statut, client_id, chambre_id) VALUES
-('2025-09-10', '2025-09-15', 'active', 1, 1);
-
-INSERT INTO feedbacks (commentaire, note, client_id) VALUES
-('Super séjour !', 5, 1);
-
-INSERT INTO evenements (titre, description, date, gestionnaire_id) VALUES
-('Mariage', 'Réservation salle pour mariage', '2025-09-20', 2);
-
-INSERT INTO notifications (contenu, destinataire_id, type) VALUES
-('Votre réservation est confirmée', 1, 'client');
-
-INSERT INTO horaires_employes (employe_id, date, shift) VALUES
-(3, '2025-09-12', 'matin');
