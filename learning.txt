@@ -2,3 +2,5 @@
 Elle permet de générer des constructeurs avec/sans attributs, des getters et setters, ce qui permet de perdre moins de temps
 en écrivant 50 lignes de getters/setters.
 Très utilisé dans le monde du travail, gardant un code moins difficile à lire et moins long,
+
+-Dans les entités il devrait y avoir les Getters et Setters.
