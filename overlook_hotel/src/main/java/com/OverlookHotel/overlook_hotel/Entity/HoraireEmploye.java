@@ -8,8 +8,12 @@ import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import java.sql.Date;
 import java.util.Collections;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 public class HoraireEmploye {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
