@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-OverlookHotelApplication<overlook_hotel>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.OverlookHotel.overlook_hotel.OverlookHotelApplication",
+            "projectName": "overlook_hotel",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

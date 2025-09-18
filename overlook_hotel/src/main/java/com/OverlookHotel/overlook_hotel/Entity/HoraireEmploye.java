@@ -23,6 +23,6 @@ public class HoraireEmploye {
     private String shift;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id")
-    private Employe employee;
+    @JoinColumn(name = "employe_id")
+    private Employe employe;
 }

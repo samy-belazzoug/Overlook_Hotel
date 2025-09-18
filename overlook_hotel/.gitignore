@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Fichiers sensibles
+src/main/resources/application.properties
+
+# Dossiers Maven / Java
+target/
+*.class
+*.log

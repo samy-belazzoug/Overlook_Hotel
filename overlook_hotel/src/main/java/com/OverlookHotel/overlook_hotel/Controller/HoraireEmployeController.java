@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/horaireEmployes")
+@RequestMapping("/api/horaireemployes")
 public class HoraireEmployeController {
 
     private final HoraireEmployeService horaireEmployeService;
