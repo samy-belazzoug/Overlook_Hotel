@@ -1,41 +1,35 @@
 package com.OverlookHotel.overlook_hotel.Entity;
 
 import java.util.List;
-import java.util.Collections;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
-@Data
 @Entity
 public class Employe {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String nom;
-    private String prenom;
+    private String last_name;
+    private String name;
     private String email;
-    private String telephone;
-    private String poste;
+    private String phone;
+    private String position; //Job
 
-    public String getNom() { return nom; }
-    public void setNom(String nom) { this.nom = nom; }
+    public String getLastName() { return last_name; }
+    public void setLastName(String last_name) { this.last_name = last_name; }
 
-    public String getPrenom() { return prenom; }
-    public void setPrenom(String prenom) { this.prenom = prenom; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public String getTelephone() { return telephone; }
-    public void setTelephone(String telephone) { this.telephone = telephone; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
-    public String getPoste() { return poste; }
-    public void setPoste(String poste) { this.poste = poste; }
-
+    public String getPosition() { return position; }
+    public void setPosition(String position) { this.position = position; }
 
     @OneToMany(mappedBy = "employe")
-    private List<HoraireEmploye> horaires;
+    private List<Schedules> schedules;
 }

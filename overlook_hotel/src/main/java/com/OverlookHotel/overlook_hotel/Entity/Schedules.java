@@ -1,20 +1,13 @@
 package com.OverlookHotel.overlook_hotel.Entity;
 
-import java.util.List;
-
-import org.antlr.v4.runtime.misc.NotNull;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
-
-import java.sql.Date;
 import java.time.LocalDate;
-import java.util.Collections;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
-public class HoraireEmploye {
+public class Schedules {
+
+    //Parameters
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
@@ -22,6 +15,8 @@ public class HoraireEmploye {
     private LocalDate date;
     private String shift;
     
+    //Getters / Setters
+
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
 
@@ -31,6 +26,7 @@ public class HoraireEmploye {
     public Employe getEmploye() { return employe; }
     public void setEmploye(Employe employe) { this.employe = employe; }
 
+    //Foreign key
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employe_id")

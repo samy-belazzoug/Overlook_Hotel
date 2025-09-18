@@ -6,11 +6,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Parent Spring Boot -->
+    <!-- Spring Boot parent -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.5</version>
+        <version>3.5.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -25,7 +25,7 @@
         <java.version>17</java.version>
     </properties>
 
-    <!-- Dépendances -->
+    <!-- Dependencies -->
     <dependencies>
 
         <!-- Spring Boot Web -->
@@ -47,21 +47,13 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok pour générer getters/setters automatiquement -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Thymeleaf (optionnel, pour templates si besoin) -->
+        <!-- Thymeleaf (optionnal, for templates if needed) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
-        <!-- DevTools pour rechargement automatique -->
+        <!-- DevTools for automatic realoading -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>

@@ -24,6 +24,8 @@ public class EmployeService {
         return employeRepository.findById(id);
     }
 
+    //CRUD OPERATIONS
+
     public Employe addEmploye(Employe employe) {
         return employeRepository.save(employe);
     }
@@ -31,14 +33,14 @@ public class EmployeService {
     public Employe updateEmploye(Integer id, Employe updatedEmploye) {
         return employeRepository.findById(id)
                 .map(employe -> {
-                    employe.setNom(updatedEmploye.getNom());
-                    employe.setPrenom(updatedEmploye.getPrenom());
+                    employe.setLastName(updatedEmploye.getLastName());
+                    employe.setName(updatedEmploye.getName());
                     employe.setEmail(updatedEmploye.getEmail());
-                    employe.setTelephone(updatedEmploye.getTelephone());
-                    employe.setPoste(updatedEmploye.getPoste());
+                    employe.setPhone(updatedEmploye.getPhone());
+                    employe.setPosition(updatedEmploye.getPosition());
                     return employeRepository.save(employe);
                 })
-                .orElseThrow(() -> new RuntimeException("Employé non trouvé avec id " + id));
+                .orElseThrow(() -> new RuntimeException("Employe not found with id : " + id));
     }
 
     public void deleteEmploye(Integer id) {
