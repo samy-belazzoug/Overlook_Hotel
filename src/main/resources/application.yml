@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/overlook
+    username: postgres
+    password: 1111
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update # создаёт/обновляет таблицы автоматически
+    show-sql: true # вывод SQL в консоль
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: always # exécuter schema.sql/data.sql au démarrage
+      continue-on-error: true # ignorer les erreurs si les objets existent déjà
+  # Si vous souhaitez exécuter les scripts APRÈS le schéma JPA, décommentez:
+  # jpa:
+  #   defer-datasource-initialization: true
+
+  # configuration email
+  mail:
+    host: smtp.example.com
+    port: 587
+    username: user@example.com
+    password: yourpassword
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8080
