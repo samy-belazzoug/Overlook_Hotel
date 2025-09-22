@@ -25,6 +25,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/evenements/**").permitAll()
                 .requestMatchers("/api/evenements/**").hasAnyRole("CLIENT", "GESTIONNAIRE")
                 .requestMatchers("/api/gestionnaires/**").hasRole("GESTIONNAIRE")
+                .requestMatchers(HttpMethod.GET, "/api/notifications/**").permitAll()
                 .requestMatchers("/api/notifications/**").hasRole("GESTIONNAIRE")
 				.requestMatchers("/api/dashboard/**").permitAll()
                 .anyRequest().authenticated()
