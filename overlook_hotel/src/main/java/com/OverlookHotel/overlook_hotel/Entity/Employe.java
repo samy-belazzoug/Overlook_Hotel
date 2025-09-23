@@ -9,14 +9,14 @@ public class Employe {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String last_name;
+    private String lastName;
     private String name;
     private String email;
     private String phone;
     private String position; //Job
 
-    public String getLastName() { return last_name; }
-    public void setLastName(String last_name) { this.last_name = last_name; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

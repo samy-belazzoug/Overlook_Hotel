@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface EmployeRepository extends JpaRepository<Employe, Integer> {    
-    List<Employe> findByLastName(String last_name);
+    List<Employe> findByLastName(String lastName);
     List<Employe> findByPosition(String position);
 }
