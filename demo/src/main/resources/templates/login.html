@@ -3,11 +3,11 @@
 <head><title>Connexion</title></head>
 <body>
 <h2>Connexion</h2>
-<form method="post" action="/login">
+<form th:action="@{/login}" method="post">
     <label>Nom d'utilisateur :</label>
-    <input type="text" name="username" required/><br/>
+    <input type="text" name="username" placeholder="Username"/>
     <label>Mot de passe :</label>
-    <input type="password" name="password" required/><br/>
+    <input type="password" name="password" placeholder="Password"/>
     <button type="submit">Se connecter</button>
 </form>
 <p><a href="/register">Créer un compte</a></p>

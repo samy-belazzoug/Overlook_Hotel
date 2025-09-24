@@ -32,82 +32,67 @@ public class AuthController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private User currentUser; 
+    private User currentUser;
 
     // ===== LOGIN =====
     @GetMapping("/login")
-    public String loginPage() {
-        return "login";
-    }
+    public String loginPage() { return "login"; }
 
     @PostMapping("/login")
     public String login(@RequestParam String username,
-                        @RequestParam String password,
-                        Model model) {
+                        @RequestParam String password) {
         return userRepository.findByUsernameAndPassword(username, password)
                 .map(user -> {
-                    this.currentUser = user; // enregistrer comme "connecté"
-                    model.addAttribute("message", "Bienvenue " + user.getUsername() + " !");
-                    model.addAttribute("rooms", roomRepository.findByStatus("available"));
-                    return "welcome"; 
+                    this.currentUser = user;
+                    return "redirect:/welcome";
                 })
-                .orElseGet(() -> {
-                    model.addAttribute("error", "Identifiants invalides");
-                    return "login";
-                });
+                .orElse("redirect:/login?error=true");
     }
+
 
     // ===== REGISTER =====
     @GetMapping("/register")
-    public String registerPage() {
-        return "register";
-    }
-
+    public String registerPage() { return "register"; }
     @PostMapping("/register")
     public String register(@RequestParam String username,
-                           @RequestParam String email,
                            @RequestParam String password,
-                           Model model) {
+                           @RequestParam String email,
+                           @RequestParam String telephone) {
         if (userRepository.findByEmail(email).isPresent()) {
-            model.addAttribute("error", "Email déjà utilisé");
-            return "register";
+            return "redirect:/register?error=email_exists";
         }
-
         User newUser = new User();
         newUser.setUsername(username);
-        newUser.setEmail(email);
         newUser.setPassword(password);
+        newUser.setEmail(email);
+        newUser.setTelephone(telephone);
         userRepository.save(newUser);
-
-        // ⚙️ Assigner automatiquement le rôle "CLIENT" (id = 1)
-        jdbcTemplate.update(
-            "INSERT INTO user_roles (user_id, role_id) VALUES (?, 1)",
-            newUser.getId()
-        );
-
-        model.addAttribute("message", "Inscription réussie, connectez-vous !");
-        return "login";
+        return "redirect:/login?registered=true";
     }
-
-    // ===== WELCOME + RESERVATION =====
+    // ===== WELCOME =====
     @GetMapping("/welcome")
     public String welcomePage(Model model) {
+        if (currentUser != null) {
+            model.addAttribute("welcomeMessage", "Bienvenue " + currentUser.getUsername() + " !");
+        }
+        return "welcome"; // juste message et liens
+    }
+
+    // ===== RESERVATIONS =====
+    @GetMapping("/reservations")
+    public String reservationsPage(Model model) {
+        if (currentUser == null) return "redirect:/login";
         model.addAttribute("rooms", roomRepository.findByStatus("available"));
-        return "welcome";
+        return "reservations"; // page avec formulaire de réservation
     }
 
     @PostMapping("/reserve")
     public String reserve(@RequestParam Long roomId,
                           @RequestParam String dateDebut,
-                          @RequestParam String dateFin,
-                          Model model) {
+                          @RequestParam String dateFin) {
+        if (currentUser == null) return "redirect:/login";
+
         Room room = roomRepository.findById(roomId).orElseThrow();
-
-        if (this.currentUser == null) {
-            model.addAttribute("error", "Vous devez être connecté pour réserver !");
-            return "login";
-        }
-
         Reservation res = new Reservation();
         res.setChambre(room);
         res.setClient(currentUser);
@@ -117,12 +102,63 @@ public class AuthController {
 
         reservationRepository.save(res);
 
-        // Mettre à jour le statut de la chambre
         room.setStatus("occupied");
         roomRepository.save(room);
 
-        model.addAttribute("message", "Réservation réussie !");
-        model.addAttribute("rooms", roomRepository.findByStatus("available"));
-        return "welcome";
+        return "redirect:/my-reservations";
+    }
+
+    // ===== MY RESERVATIONS =====
+    @GetMapping("/my-reservations")
+    public String myReservations(Model model) {
+        if (currentUser == null) return "redirect:/login";
+        model.addAttribute("reservations", reservationRepository.findByClient(currentUser));
+        return "my_reservations";
+    }
+
+    @PostMapping("/cancel-reservation")
+    public String cancelReservation(@RequestParam Long reservationId) {
+        Reservation res = reservationRepository.findById(reservationId).orElseThrow();
+        if (res.getClient().getId().equals(currentUser.getId())) {
+            Room room = res.getChambre();
+            room.setStatus("available");
+            roomRepository.save(room);
+            reservationRepository.delete(res);
+        }
+        return "redirect:/my-reservations";
+    }
+
+    @PostMapping("/update-reservation")
+    public String updateReservation(@RequestParam Long reservationId,
+                                    @RequestParam String dateDebut,
+                                    @RequestParam String dateFin) {
+        Reservation res = reservationRepository.findById(reservationId).orElseThrow();
+        if (res.getClient().getId().equals(currentUser.getId())) {
+            res.setDateDebut(LocalDate.parse(dateDebut));
+            res.setDateFin(LocalDate.parse(dateFin));
+            reservationRepository.save(res);
+        }
+        return "redirect:/my-reservations";
+    }
+
+    // ===== PROFIL =====
+    @GetMapping("/profil")
+    public String profilPage(Model model) {
+        if (currentUser == null) return "redirect:/login";
+        model.addAttribute("user", currentUser);
+        return "profil";
+    }
+
+    @PostMapping("/update-profile")
+    public String updateProfile(@RequestParam String email,
+                                @RequestParam String telephone,
+                                @RequestParam(required = false) String password,
+                                Model model) {
+        if (currentUser == null) return "redirect:/login";
+        currentUser.setEmail(email);
+        currentUser.setTelephone(telephone);
+        if (password != null && !password.isBlank()) currentUser.setPassword(password);
+        userRepository.save(currentUser);
+        return "redirect:/profil";
     }
 }
