@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -77,6 +79,32 @@ public class AuthController {
         }
         return "welcome"; // juste message et liens
     }
+    // ====== FEEDBACK ======
+    @GetMapping("/feedback")
+    public String feedbackPage(Model model) {
+        if (currentUser == null) return "redirect:/login";
+        return "feedback"; // page avec formulaire de feedback
+
+    }
+    @GetMapping("/all-feedbacks")
+    public String allFeedbacks(Model model) {
+        String sql = "SELECT * FROM feedbacks ORDER BY date DESC";
+        List<Map<String, Object>> feedbacks = jdbcTemplate.queryForList(sql);
+        model.addAttribute("feedbacks", feedbacks);
+        return "all_feedbacks"; // une nouvelle page
+    }
+
+    @PostMapping("/submit-feedback")
+    public String submitFeedback(@RequestParam String commentaire,
+                                 @RequestParam int note) {
+        if (currentUser == null) return "redirect:/login";
+        String sql = "INSERT INTO feedbacks (commentaire, note, date, client_id) VALUES (?, ?, NOW(), ?)";
+        jdbcTemplate.update(sql, commentaire, note, currentUser.getId());
+
+        return "redirect:/welcome?feedbacks_submitted=true";
+    }
+
+
 
     // ===== RESERVATIONS =====
     @GetMapping("/reservations")
