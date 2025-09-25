@@ -2,8 +2,9 @@ package com.OverlookHotel.overlook_hotel.Controller;
 
 import com.OverlookHotel.overlook_hotel.Entity.Employe;
 import com.OverlookHotel.overlook_hotel.Service.EmployeService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/employes")
@@ -14,81 +15,42 @@ public class EmployeController {
     public EmployeController(EmployeService employeService) {
         this.employeService = employeService;
     }
-    
-    // GET : All employees
-    @GetMapping
-    public List<Employe> getAllEmployes() {
-        return employeService.getAllEmployes();
+
+    @PostMapping("/login")
+    public String login(@RequestParam String email, @RequestParam String password, HttpSession session) {
+        Optional<Employe> opt = employeService.getEmployeByEmail(email);
+        if(opt.isPresent()) {
+            Employe employe = opt.get();
+            if(employe.getPassword().equals(password)) {
+                session.setAttribute("userId", employe.getId());
+                session.setAttribute("userName", employe.getName());
+                session.setAttribute("role", employe.getPosition());
+                return "redirect:/admin.html";
+            }
+        }
+        return "redirect:/login.html?error=true";
     }
 
-    // GET : Employe by id
-    @GetMapping("/{id}")
-    public Employe getEmployeById(@PathVariable Integer id) {
-        return employeService.getEmployeById(id)
-                .orElseThrow(() -> new RuntimeException("Employe not found with id : " + id));
+    @GetMapping("/admin.html")
+    public String admin(HttpSession session) {
+        if(session.getAttribute("userId") == null) {
+            return "redirect:/login.html";
+        }
+        return "admin";
     }
 
-    // POST : Add an employe
-    @PostMapping
-    public Employe addEmploye(@RequestBody Employe employe) {
-        return employeService.addEmploye(employe);
+    @GetMapping("/session-info")
+    public Map<String, String> sessionInfo(HttpSession session) {
+        Map<String, String> info = new HashMap<>();
+        Integer userId = (Integer) session.getAttribute("userId");
+        String userName = (String) session.getAttribute("userName");
+        if(userId != null && userName != null) {
+            info.put("userId", userId.toString());
+            info.put("userName", userName);
+        } else {
+            info.put("userId", "0");
+            info.put("userName", "Unknown");
+        }
+        return info;
     }
-
-    // PUT : Update an employe
-    @PutMapping("/{id}")
-    public Employe updateEmploye(@PathVariable Integer id, @RequestBody Employe updatedEmploye) {
-        return employeService.updateEmploye(id, updatedEmploye);
-    }
-
-    // DELETE : Delete an employe
-    @DeleteMapping("/{id}")
-    public void deleteEmploye(@PathVariable Integer id) {
-        employeService.deleteEmploye(id);
-    }
-
-    // GET : Search by last name
-    @GetMapping("/search/last_name")
-    public List<Employe> getByLastName(@RequestParam String lastName) {
-        return employeService.getAllEmployes()
-                .stream()
-                .filter(h -> h.getLastName().equals(lastName))
-                .toList();
-    }
-
-    // GET : Search by name
-    @GetMapping("/search/name")
-    public List<Employe> getByName(@RequestParam String name) {
-        return employeService.getAllEmployes()
-                .stream()
-                .filter(h -> h.getName().equalsIgnoreCase(name))
-                .toList();
-    }
-
-    // GET : Search by email
-    @GetMapping("/search/email")
-    public List<Employe> getByDate(@RequestParam String email) {
-        return employeService.getAllEmployes()
-                .stream()
-                .filter(h -> h.getEmail().equals(email))
-                .toList();
-    }
-
-    // GET : Search by phone
-    @GetMapping("/search/phone")
-    public List<Employe> getByShift(@RequestParam String phone) {
-        return employeService.getAllEmployes()
-                .stream()
-                .filter(h -> h.getPhone().equalsIgnoreCase(phone))
-                .toList();
-    }
-
-    // GET : Search by position
-    @GetMapping("/search/position")
-    public List<Employe> getByPosition(@RequestParam String position) {
-        return employeService.getAllEmployes()
-                .stream()
-                .filter(h -> h.getPosition().equalsIgnoreCase(position))
-                .toList();
-    }
-
 }

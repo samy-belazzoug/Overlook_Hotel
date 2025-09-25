@@ -8,10 +8,8 @@ import java.util.Optional;
 
 @Service
 public class SchedulesService {
-    
-    //Object of repository
-    private final SchedulesRepository scheduleRepository;
 
+    private final SchedulesRepository scheduleRepository;
 
     public SchedulesService(SchedulesRepository scheduleRepository) {
         this.scheduleRepository = scheduleRepository;
@@ -29,18 +27,21 @@ public class SchedulesService {
         return scheduleRepository.save(schedule);
     }
 
-    public Schedules updateSchedules(Integer id, Schedules updatedSchedules) {
-    return scheduleRepository.findById(id)
-            .map(schedule -> {
-                schedule.setDate(updatedSchedules.getDate());
-                schedule.setShift(updatedSchedules.getShift());
-                return scheduleRepository.save(schedule); 
-            })
-            .orElseThrow(() -> new RuntimeException("Schedule not found with id : " + id));
+    public Schedules updateSchedules(Integer id, Schedules updatedSchedule) {
+        return scheduleRepository.findById(id)
+                .map(schedule -> {
+                    schedule.setDate(updatedSchedule.getDate());
+                    schedule.setShift(updatedSchedule.getShift());
+                    return scheduleRepository.save(schedule);
+                })
+                .orElseThrow(() -> new RuntimeException("Schedule not found with id: " + id));
     }
 
     public void deleteSchedules(Integer id) {
         scheduleRepository.deleteById(id);
     }
 
+    public List<Schedules> getSchedulesByEmployeeId(Integer employeeId) {
+        return scheduleRepository.findByEmployeId(employeeId);
+    }
 }

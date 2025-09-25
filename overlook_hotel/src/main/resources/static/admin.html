@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Employee Intranet</title>
+</head>
+<body>
+<h1>Welcome, <span id="employee-name">Employee</span>!</h1>
+<button onclick="addShift()">Add Shift</button>
+<table border="1">
+<thead><tr><th>Date</th><th>Shift</th><th>Actions</th></tr></thead>
+<tbody id="schedule-body"></tbody>
+</table>
+
+<script>
+let userId;
+
+async function loadSession() {
+    const res = await fetch('/employes/session-info');
+    const data = await res.json();
+    document.getElementById('employee-name').innerText = data.userName;
+    userId = data.userId;
+}
+
+async function loadSchedules() {
+    const res = await fetch('/schedules/my-schedules');
+    const schedules = await res.json();
+    const tbody = document.getElementById('schedule-body');
+    tbody.innerHTML = '';
+    if(schedules.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3">No shifts found</td></tr>';
+    }
+    schedules.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.date}</td><td>${s.shift}</td>
+        <td>
+            <button onclick="deleteShift(${s.id})">Delete</button>
+        </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+async function addShift() {
+    const date = prompt('Date (YYYY-MM-DD):');
+    const shift = prompt('Shift:');
+    await fetch('/schedules/my-schedules', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({date, shift})
+    });
+    loadSchedules();
+}
+
+async function deleteShift(id) {
+    await fetch(`/schedules/my-schedules/${id}`, {method:'DELETE'});
+    loadSchedules();
+}
+
+window.onload = async () => {
+    await loadSession();
+    await loadSchedules();
+};
+</script>
+</body>
+</html>

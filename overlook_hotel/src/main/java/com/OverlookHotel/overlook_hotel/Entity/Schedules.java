@@ -28,7 +28,8 @@ public class Schedules {
 
     //Foreign key
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "employe_id")
     private Employe employe;
+
 }

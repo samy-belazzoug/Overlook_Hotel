@@ -14,7 +14,10 @@ public class Employe {
     private String email;
     private String phone;
     private String position; //Job
+    private String password; // Nouveau champ mot de passe
 
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
 
@@ -29,6 +32,10 @@ public class Employe {
 
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }
+
+    // getters / setters
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
     @OneToMany(mappedBy = "employe")
     private List<Schedules> schedules;

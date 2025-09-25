@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Connexion - Overlook Hotel</title>
+</head>
+<body>
+  <h1>Connexion</h1>
+
+  <form id="loginForm">
+    <label for="email">Email :</label><br>
+    <input id="email" name="email" type="email" required><br><br>
+
+    <label for="password">Mot de passe :</label><br>
+    <input id="password" name="password" type="password" required><br><br>
+
+    <button type="submit">Se connecter</button>
+  </form>
+
+  <p id="message"></p>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const msg = document.getElementById("message");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        msg.textContent = "Veuillez remplir tous les champs.";
+        return;
+      }
+
+      // 🔹 Fausse connexion : on stocke juste l'email
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userEmail", email);
+
+      msg.textContent = "Connexion réussie ✔";
+      setTimeout(() => {
+        window.location.href = "admin.html"; // redirige vers l'admin
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

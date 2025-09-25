@@ -1,10 +1,10 @@
 package com.OverlookHotel.overlook_hotel.Controller;
 
 import com.OverlookHotel.overlook_hotel.Entity.Schedules;
+import com.OverlookHotel.overlook_hotel.Entity.Employe;
 import com.OverlookHotel.overlook_hotel.Service.SchedulesService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -17,52 +17,42 @@ public class SchedulesController {
         this.scheduleService = scheduleService;
     }
 
-    // GET : All schedules
-    @GetMapping
-    public List<Schedules> getAllSchedules() {
-        return scheduleService.getAllSchedules();
+    @GetMapping("/my-schedules")
+    public List<Schedules> getMySchedules(HttpSession session) {
+        Integer employeeId = (Integer) session.getAttribute("userId");
+        if(employeeId == null) throw new RuntimeException("Not logged in");
+        return scheduleService.getSchedulesByEmployeeId(employeeId);
     }
 
-    // GET : Schedule by ID
-    @GetMapping("/{id}")
-    public Schedules getSchedulesById(@PathVariable Integer id) {
-        return scheduleService.getSchedulesById(id)
-                .orElseThrow(() -> new RuntimeException("Schedule not found with id : " + id));
-    }
-
-    // POST : Add a schedule
-    @PostMapping
-    public Schedules addSchedules(@RequestBody Schedules schedule) {
+    @PostMapping("/my-schedules")
+    public Schedules addMySchedule(@RequestBody Schedules schedule, HttpSession session) {
+        Integer userId = (Integer) session.getAttribute("userId");
+        if(userId == null) throw new RuntimeException("Not logged in");
+        Employe e = new Employe();
+        e.setId(userId);
+        schedule.setEmploye(e);
         return scheduleService.addSchedules(schedule);
     }
 
-    // PUT : Modify a schedule
-    @PutMapping("/{id}")
-    public Schedules updateSchedules(@PathVariable Integer id, @RequestBody Schedules updatedSchedule) {
-        return scheduleService.updateSchedules(id, updatedSchedule);
+    @PutMapping("/my-schedules/{id}")
+    public Schedules updateMySchedule(@PathVariable Integer id, @RequestBody Schedules schedule, HttpSession session) {
+        Integer userId = (Integer) session.getAttribute("userId");
+        if(userId == null) throw new RuntimeException("Not logged in");
+        Schedules existing = scheduleService.getSchedulesById(id)
+                .orElseThrow(() -> new RuntimeException("Schedule not found"));
+        if(!existing.getEmploye().getId().equals(userId)) throw new RuntimeException("Not authorized");
+        existing.setDate(schedule.getDate());
+        existing.setShift(schedule.getShift());
+        return scheduleService.updateSchedules(id, existing);
     }
 
-    // DELETE : Delete a schedule
-    @DeleteMapping("/{id}")
-    public void deleteSchedules(@PathVariable Integer id) {
+    @DeleteMapping("/my-schedules/{id}")
+    public void deleteMySchedule(@PathVariable Integer id, HttpSession session) {
+        Integer userId = (Integer) session.getAttribute("userId");
+        if(userId == null) throw new RuntimeException("Not logged in");
+        Schedules existing = scheduleService.getSchedulesById(id)
+                .orElseThrow(() -> new RuntimeException("Schedule not found"));
+        if(!existing.getEmploye().getId().equals(userId)) throw new RuntimeException("Not authorized");
         scheduleService.deleteSchedules(id);
-    }
-
-    // GET : Search by date
-    @GetMapping("/search/date")
-    public List<Schedules> getByDate(@RequestParam LocalDate date) {
-        return scheduleService.getAllSchedules()
-                .stream()
-                .filter(h -> h.getDate().equals(date))
-                .toList();
-    }
-
-    // GET : Search by shift
-    @GetMapping("/search/shift")
-    public List<Schedules> getByShift(@RequestParam String shift) {
-        return scheduleService.getAllSchedules()
-                .stream()
-                .filter(h -> h.getShift().equalsIgnoreCase(shift))
-                .toList();
     }
 }
