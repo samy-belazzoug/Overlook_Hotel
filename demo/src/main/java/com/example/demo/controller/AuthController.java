@@ -77,7 +77,7 @@ public class AuthController {
         if (currentUser != null) {
             model.addAttribute("welcomeMessage", "Bienvenue " + currentUser.getUsername() + " !");
         }
-        return "welcome"; // juste message et liens
+        return "welcome"; // Page d'accueil après connexion
     }
     // ====== FEEDBACK ======
     @GetMapping("/feedback")
@@ -91,7 +91,7 @@ public class AuthController {
         String sql = "SELECT * FROM feedbacks ORDER BY date DESC";
         List<Map<String, Object>> feedbacks = jdbcTemplate.queryForList(sql);
         model.addAttribute("feedbacks", feedbacks);
-        return "all_feedbacks"; // une nouvelle page
+        return "all_feedbacks"; // Page affichant tous les feedbacks
     }
 
     @PostMapping("/submit-feedback")
