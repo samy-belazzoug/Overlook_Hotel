@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Profil</title>
+</head>
+<body>
+<h1>Bienvenue sur votre profil</h1>
+<p>Voici vos informations :</p>
+<form method="post" th:action="@{/update-profile}">
+    <ul>
+        <li>Nom d'utilisateur : <span th:text="${user.username}"></span></li>
+        <li>Email : <input type="email" name="email" th:value="${user.email}" required></li>
+        <li>Téléphone : <input type="text" name="telephone" th:value="${user.telephone}"></li>
+        <li>Mot de passe : <input type="password" name="password" placeholder="Nouveau mot de passe"></li>
+    </ul>
+    <button type="submit">Mettre à jour</button>
+</form>
+
+<a th:href="@{/welcome}">Retour à l’accueil</a>
+<a th:href="@{/login}">Se déconnecter</a>
+</body>
+</html>
