@@ -47,7 +47,7 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"), 
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private Set<Role> roles = new HashSet<>();
+    private final Set<Role> roles = new HashSet<>();
 
     // ----- Getters & Setters -----
     public Long getId() {
@@ -104,6 +104,17 @@ public class User {
 
     public void setPointsFidelite(int pointsFidelite) {
         this.pointsFidelite = pointsFidelite;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles.clear();
+        if (roles != null) {
+            this.roles.addAll(roles);
+        }
     }
 
 }
