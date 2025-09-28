@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Envoyer une notification - Overlook Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <h1>Envoyer une notification</h1>
+
+  <form id="notifForm">
+    <label>ID destinataire:
+      <input type="number" id="destinataireId" required>
+    </label>
+
+    <label>Type destinataire:
+      <select id="destinataireType" required>
+        <option value="CLIENT">Client</option>
+        <option value="EMPLOYE">Employé</option>
+      </select>
+    </label>
+
+    <label>Contenu:
+      <textarea id="contenu" rows="4" cols="40" required></textarea>
+    </label>
+
+    <label>Type de notification:
+      <select id="type">
+        <option value="INFO">INFO</option>
+        <option value="ALERTE">ALERTE</option>
+        <option value="REMARQUE">REMARQUE</option>
+      </select>
+    </label>
+
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    const apiUrl = "http://localhost:8080/api/notifications";
+
+    document.getElementById("notifForm").addEventListener("submit", async e => {
+      e.preventDefault();
+
+      const destinataireId = document.getElementById("destinataireId").value;
+      const destinataireType = document.getElementById("destinataireType").value;
+      const contenu = document.getElementById("contenu").value;
+      const type = document.getElementById("type").value;
+
+      try {
+        const res = await fetch(`${apiUrl}?destinataireId=${destinataireId}&destinataireType=${destinataireType}&contenu=${encodeURIComponent(contenu)}&type=${type}`, {
+          method: "POST"
+        });
+
+        if (!res.ok) throw new Error("Erreur lors de l'envoi");
+
+        const notif = await res.json();
+        document.getElementById("result").innerText =
+          ` Notification envoyée (ID: ${notif.id}, Type: ${notif.type})`;
+      } catch (err) {
+        document.getElementById("result").innerText = " Erreur: " + err.message;
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion des événements - Overlook Hotel</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <h1>Gestion des événements</h1>
+
+  <h2>Créer un nouvel événement</h2>
+  <form id="createForm">
+    <label>Titre: <input type="text" id="titre" required></label>
+    <label>Description: <input type="text" id="description" required></label>
+    <label>Date: <input type="datetime-local" id="date" required></label>
+    <label>Capacité: <input type="number" id="capacity" required></label>
+    <button type="submit">Créer</button>
+  </form>
+
+  <h2>Liste des événements</h2>
+  <div id="eventList">Chargement...</div>
+
+  <script>
+    const apiUrl = "http://localhost:8080/api/evenements";
+    const gestionnaireId = 1; // ⚠️ à adapter (id réel du gestionnaire)
+
+    // Charger événements
+    async function loadEvents() {
+      try {
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error("Erreur chargement événements");
+        const events = await res.json();
+        const container = document.getElementById("eventList");
+        container.innerHTML = "";
+
+        events.forEach(ev => {
+          const div = document.createElement("div");
+          div.className = "event";
+          div.innerHTML = `
+            <strong>${ev.titre}</strong><br>
+            ${ev.description}<br>
+            Date: ${ev.date}<br>
+            Capacité: ${ev.capacity}<br>
+            <button onclick="deleteEvent(${ev.id})">Supprimer</button>
+            <button onclick="editEvent(${ev.id}, '${ev.titre}', '${ev.description}', '${ev.date}', ${ev.capacity})">Modifier</button>
+          `;
+          container.appendChild(div);
+        });
+      } catch (e) {
+        document.getElementById("eventList").innerText = "Impossible de charger les événements.";
+      }
+    }
+
+    // Créer événement
+    document.getElementById("createForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const dto = {
+        titre: document.getElementById("titre").value,
+        description: document.getElementById("description").value,
+        date: document.getElementById("date").value,
+        capacity: document.getElementById("capacity").value
+      };
+      await fetch(`${apiUrl}?gestionnaireId=${gestionnaireId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dto)
+      });
+      loadEvents();
+    });
+
+    // Supprimer événement
+    async function deleteEvent(id) {
+      await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+      loadEvents();
+    }
+
+    // Modifier événement
+    async function editEvent(id, titre, description, date, capacity) {
+      const newTitre = prompt("Nouveau titre:", titre);
+      const newDesc = prompt("Nouvelle description:", description);
+      const newDate = prompt("Nouvelle date (YYYY-MM-DDTHH:mm):", date);
+      const newCapacity = prompt("Nouvelle capacité:", capacity);
+
+      const dto = {
+        titre: newTitre,
+        description: newDesc,
+        date: newDate,
+        capacity: parseInt(newCapacity)
+      };
+
+      await fetch(`${apiUrl}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dto)
+      });
+      loadEvents();
+    }
+
+    loadEvents();
+  </script>
+</body>
+
+</html>

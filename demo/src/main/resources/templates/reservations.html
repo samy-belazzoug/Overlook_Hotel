@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Réserver une chambre</title>
+</head>
+<body>
+<h2>Réserver une chambre</h2>
+
+<form method="post" action="/reserve">
+    <label for="room">Choisissez une chambre :</label>
+    <select name="roomId" id="room">
+        <option th:each="room : ${rooms}" th:value="${room.id}"
+                th:text="'Chambre ' + ${room.number} + ' (' + ${room.type} + ') - ' + ${room.price} + '€'">
+        </option>
+    </select><br/>
+
+    <label>Date début :</label>
+    <input type="date" name="dateDebut" required><br/>
+
+    <label>Date fin :</label>
+    <input type="date" name="dateFin" required><br/>
+
+    <button type="submit">Réserver</button>
+</form>
+
+<a th:href="@{/welcome}">Retour à l’accueil</a>
+<a th:href="@{/my-reservations}">Voir mes réservations</a>
+</body>
+</html>
