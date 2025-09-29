@@ -23,7 +23,7 @@ public class DashboardService {
         DashboardDto dto = new DashboardDto();
         dto.setConfirmedReservations(confirmed);
         dto.setCancelledReservations(cancelled);
-        dto.setRevenus(0);       // TODO: revenus + moyenne notes (Dev1/Dev2 zones)
+        dto.setRevenus(0);      
         dto.setTauxOccupation((confirmed * 1.0) / (totalReservations == 0 ? 1 : totalReservations));
         return dto;
     }

@@ -1,26 +1,27 @@
 package com.example.demo.security;
 
-import com.example.demo.model.Gestionnaire;
-import com.example.demo.repository.GestionnaireRepository;
-
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
+
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final GestionnaireRepository repository;
+    private final UserRepository userRepository;
 
-    public CustomUserDetailsService(GestionnaireRepository repository) {
-        this.repository = repository;
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Gestionnaire g = repository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable: " + email));
-        return new CustomUserDetails(g);
+
+        return new CustomUserDetails(user);
     }
 }

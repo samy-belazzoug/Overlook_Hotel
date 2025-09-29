@@ -3,7 +3,6 @@ package com.example.demo.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,26 +10,27 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/evenements/**").permitAll()
-                .requestMatchers("/api/evenements/**").hasAnyRole("CLIENT", "GESTIONNAIRE")
-                .requestMatchers("/api/gestionnaires/**").hasRole("GESTIONNAIRE")
-                .requestMatchers(HttpMethod.GET, "/api/notifications/**").permitAll()
-                .requestMatchers("/api/notifications/**").hasRole("GESTIONNAIRE")
-				.requestMatchers("/api/dashboard/**").permitAll()
+                .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/welcome/**", "/profil/**", "/reservations/**", "/my-reservations/**", "/feedback/**").hasRole("CLIENT")
+                .requestMatchers("/dashboard/**").hasAnyRole("MANAGER", "ADMIN")
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form.disable());
+            .formLogin(form -> form
+                .loginPage("/login")
+                .permitAll()
+            )
+            .logout(logout -> logout.permitAll())
+            .csrf(csrf -> csrf.disable()); // désactiver CSRF si nécessaire pour les tests, sinon configure-le correctement
 
         return http.build();
     }
@@ -45,14 +45,14 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // CORS configuration
+    // Configuration CORS (utile si tu testes avec des requêtes front-end depuis un autre port)
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
             @Override
-            public void addCorsMappings(CorsRegistry registry) {
+            public void addCorsMappings(@org.springframework.lang.NonNull CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOriginPatterns("*") // dev: allow all origins (adjust for prod)
+                        .allowedOriginPatterns("*")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

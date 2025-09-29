@@ -8,56 +8,24 @@ public class EvenementDto {
     private String description;
     private LocalDateTime date;
     private Integer capacity;
-    private Long gestionnaireId;
+    private Long gestionnaireId; // ID du User gestionnaire
 
-    public Long getId() {
-        return id;
-    }
+    // ----- Getters & Setters -----
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getTitre() { return titre; }
+    public void setTitre(String titre) { this.titre = titre; }
 
-    public String getTitre() {
-        return titre;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setTitre(String titre) {
-        this.titre = titre;
-    }
+    public LocalDateTime getDate() { return date; }
+    public void setDate(LocalDateTime date) { this.date = date; }
 
-    public String getDescription() {
-        return description;
-    }
+    public Integer getCapacity() { return capacity; }
+    public void setCapacity(Integer capacity) { this.capacity = capacity; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public LocalDateTime getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDateTime date) {
-        this.date = date;
-    }
-
-    public Integer getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(Integer capacity) {
-        this.capacity = capacity;
-    }
-
-    public Long getGestionnaireId() {
-        return gestionnaireId;
-    }
-
-    public void setGestionnaireId(Long gestionnaireId) {
-        this.gestionnaireId = gestionnaireId;
-    }
+    public Long getGestionnaireId() { return gestionnaireId; }
+    public void setGestionnaireId(Long gestionnaireId) { this.gestionnaireId = gestionnaireId; }
 }
-
-
-

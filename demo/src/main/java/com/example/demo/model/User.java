@@ -23,98 +23,42 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String username;
-
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(nullable=false, unique=true)
     private String email;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable=false)
     private String password;
 
-    @Column(length = 20)
+    @Column(nullable=false)
+    private String username;
+
     private String telephone;
 
-    @Column(name = "date_inscription")
     private LocalDateTime dateInscription = LocalDateTime.now();
 
-    @Column(name = "points_fidelite")
-    private Integer pointsFidelite = 0;
-
-    @ManyToMany(fetch = FetchType.EAGER) // ⚠️ pour charger les rôles avec l’utilisateur
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
-        joinColumns = @JoinColumn(name = "user_id"), 
+        joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private final Set<Role> roles = new HashSet<>();
+    private Set<Role> roles = new HashSet<>();
 
     // ----- Getters & Setters -----
-    public Long getId() {
-    return id;
-    }
-
     public void setId(Long id) {
-        this.id = id;
-    }
+    this.id = id;}
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getTelephone() {
-        return telephone;
-    }
-
-    public void setTelephone(String telephone) {
-        this.telephone = telephone;
-    }
-
-    public LocalDateTime getDateInscription() {
-        return dateInscription;
-    }
-
-    public void setDateInscription(LocalDateTime dateInscription) {
-        this.dateInscription = dateInscription;
-    }
-
-    public int getPointsFidelite() {
-        return pointsFidelite;
-    }
-
-    public void setPointsFidelite(int pointsFidelite) {
-        this.pointsFidelite = pointsFidelite;
-    }
-
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles.clear();
-        if (roles != null) {
-            this.roles.addAll(roles);
-        }
-    }
-
+    public Long getId() { return id; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    public String getTelephone() { return telephone; }
+    public void setTelephone(String telephone) { this.telephone = telephone; }
+    public Set<Role> getRoles() { return roles; }
+    public void setRoles(Set<Role> roles) { this.roles = roles; }
+    public LocalDateTime getDateInscription() { return dateInscription; }
+    public void setDateInscription(LocalDateTime dateInscription) { this.dateInscription = dateInscription; }
 }

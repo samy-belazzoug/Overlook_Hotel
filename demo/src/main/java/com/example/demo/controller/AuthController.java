@@ -1,11 +1,15 @@
 package com.example.demo.controller;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,9 +17,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.demo.model.Reservation;
+import com.example.demo.model.Role;
 import com.example.demo.model.Room;
 import com.example.demo.model.User;
 import com.example.demo.repository.ReservationRepository;
+import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.RoomRepository;
 import com.example.demo.repository.UserRepository;
 
@@ -24,6 +30,9 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private RoomRepository roomRepository;
@@ -36,82 +45,124 @@ public class AuthController {
 
     private User currentUser;
 
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
     // ===== LOGIN =====
     @GetMapping("/login")
-    public String loginPage() { return "login"; }
+    public String loginPage() { 
+        return "login"; 
+    }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username,
-                        @RequestParam String password) {
-        return userRepository.findByUsernameAndPassword(username, password)
-                .map(user -> {
-                    this.currentUser = user;
-                    return "redirect:/welcome";
-                })
-                .orElse("redirect:/login?error=true");
+    public String login(@RequestParam String email,
+                        @RequestParam String password,
+                        Model model) {
+
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isEmpty()) {
+            model.addAttribute("error", "Email non trouvé");
+            return "login";
+        }
+
+        User user = optionalUser.get();
+
+        // Vérifie le mot de passe encodé avec BCrypt
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            model.addAttribute("error", "Mot de passe incorrect");
+            return "login";
+        }
+
+        // Si tout est OK, on sauvegarde l'utilisateur courant
+        this.currentUser = user;
+
+        // Vérifie si l'utilisateur a le rôle ADMIN ou GESTIONNAIRE
+        boolean isManagerOrAdmin = user.getRoles().stream()
+                .anyMatch(r -> r.getName().equals("ADMIN") || r.getName().equals("GESTIONNAIRE"));
+
+        if (isManagerOrAdmin) {
+            return "redirect:/dashboard";
+        } else {
+            return "redirect:/welcome";
+        }
     }
+
+
+
 
 
     // ===== REGISTER =====
     @GetMapping("/register")
     public String registerPage() { return "register"; }
+
     @PostMapping("/register")
     public String register(@RequestParam String username,
-                           @RequestParam String password,
                            @RequestParam String email,
-                           @RequestParam String telephone) {
+                           @RequestParam String password,
+                           @RequestParam String telephone,
+                           Model model) {
+
         if (userRepository.findByEmail(email).isPresent()) {
-            return "redirect:/register?error=email_exists";
+            model.addAttribute("error", "Cet email est déjà utilisé !");
+            return "register";
         }
+
         User newUser = new User();
         newUser.setUsername(username);
-        newUser.setPassword(password);
         newUser.setEmail(email);
+        newUser.setPassword(passwordEncoder.encode(password));
         newUser.setTelephone(telephone);
+
+        Role clientRole = roleRepository.findByName("CLIENT")
+                .orElseThrow(() -> new RuntimeException("Role CLIENT introuvable"));
+        newUser.setRoles(Collections.singleton(clientRole));
+
         userRepository.save(newUser);
+
         return "redirect:/login?registered=true";
     }
+
     // ===== WELCOME =====
     @GetMapping("/welcome")
     public String welcomePage(Model model) {
-        if (currentUser != null) {
-            model.addAttribute("welcomeMessage", "Bienvenue " + currentUser.getUsername() + " !");
-        }
-        return "welcome"; // juste message et liens
+        if (currentUser == null) return "redirect:/login";
+        model.addAttribute("welcomeMessage", "Bienvenue " + currentUser.getUsername() + " !");
+        return "welcome";
     }
-    // ====== FEEDBACK ======
+
+
+    // ===== FEEDBACK =====
     @GetMapping("/feedback")
     public String feedbackPage(Model model) {
         if (currentUser == null) return "redirect:/login";
-        return "feedback"; // page avec formulaire de feedback
-
+        return "feedback";
     }
+
     @GetMapping("/all-feedbacks")
     public String allFeedbacks(Model model) {
-        String sql = "SELECT * FROM feedbacks ORDER BY date DESC";
-        List<Map<String, Object>> feedbacks = jdbcTemplate.queryForList(sql);
+        if (currentUser == null) return "redirect:/login";
+        List<Map<String, Object>> feedbacks = jdbcTemplate.queryForList(
+                "SELECT * FROM feedbacks ORDER BY date DESC");
         model.addAttribute("feedbacks", feedbacks);
-        return "all_feedbacks"; // une nouvelle page
+        return "all_feedbacks";
     }
 
     @PostMapping("/submit-feedback")
     public String submitFeedback(@RequestParam String commentaire,
                                  @RequestParam int note) {
         if (currentUser == null) return "redirect:/login";
-        String sql = "INSERT INTO feedbacks (commentaire, note, date, client_id) VALUES (?, ?, NOW(), ?)";
-        jdbcTemplate.update(sql, commentaire, note, currentUser.getId());
-
+        jdbcTemplate.update(
+                "INSERT INTO feedbacks (commentaire, note, date, client_id) VALUES (?, ?, NOW(), ?)",
+                commentaire, note, currentUser.getId());
         return "redirect:/welcome?feedbacks_submitted=true";
     }
-
-
 
     // ===== RESERVATIONS =====
     @GetMapping("/reservations")
     public String reservationsPage(Model model) {
         if (currentUser == null) return "redirect:/login";
         model.addAttribute("rooms", roomRepository.findByStatus("available"));
-        return "reservations"; // page avec formulaire de réservation
+        return "reservations";
     }
 
     @PostMapping("/reserve")
@@ -180,13 +231,15 @@ public class AuthController {
     @PostMapping("/update-profile")
     public String updateProfile(@RequestParam String email,
                                 @RequestParam String telephone,
-                                @RequestParam(required = false) String password,
-                                Model model) {
+                                @RequestParam(required = false) String password) {
         if (currentUser == null) return "redirect:/login";
+        if (password != null && !password.isBlank()) {
+            currentUser.setPassword(passwordEncoder.encode(password));
+        }
         currentUser.setEmail(email);
         currentUser.setTelephone(telephone);
-        if (password != null && !password.isBlank()) currentUser.setPassword(password);
         userRepository.save(currentUser);
         return "redirect:/profil";
     }
 }
+    
