@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Users Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .user-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>👥 Test Users Management</h1>
+
+    <div class="test">
+        <h3>1. Test User Authentication</h3>
+        <button onclick="testUserLogin()">Test User Login</button>
+        <button onclick="testAdminLogin()">Test Admin Login</button>
+        <button onclick="testEmployeeLogin()">Test Employee Login</button>
+        <div id="login-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Test User CRUD Operations</h3>
+        <button onclick="loadAllUsers()">Load All Users</button>
+        <button onclick="createTestUser()">Create Test User</button>
+        <button onclick="updateTestUser()">Update Test User</button>
+        <button onclick="deleteTestUser()">Delete Test User</button>
+        <div id="user-crud-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Test User Roles</h3>
+        <button onclick="testUserRoles()">Test User Roles</button>
+        <div id="roles-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>4. Test User Search & Filter</h3>
+        <input type="text" id="search-email" placeholder="Search by email" style="padding: 5px; margin: 5px;">
+        <button onclick="searchUsers()">Search Users</button>
+        <button onclick="filterByRole()">Filter by Role</button>
+        <div id="search-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>5. Test User Statistics</h3>
+        <button onclick="getUserStats()">Get User Statistics</button>
+        <div id="stats-results"></div>
+    </div>
+
+    <script>
+        let testUserId = null;
+        let authToken = null;
+
+        async function testUserLogin() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'coucou@mail.com',
+                        password: 'password123'
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    authToken = result.token;
+                    document.getElementById('login-results').innerHTML =
+                        `<div class="success">✅ User Login Success:<br>
+                        Role: ${result.role}<br>
+                        Token: ${result.token.substring(0, 50)}...</div>`;
+                } else {
+                    document.getElementById('login-results').innerHTML =
+                        `<div class="error">❌ Login Failed: ${result}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('login-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAdminLogin() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@mail.com',
+                        password: 'password123'
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    authToken = result.token;
+                    document.getElementById('login-results').innerHTML =
+                        `<div class="success">✅ Admin Login Success:<br>
+                        Role: ${result.role}<br>
+                        Token: ${result.token.substring(0, 50)}...</div>`;
+                } else {
+                    document.getElementById('login-results').innerHTML =
+                        `<div class="error">❌ Admin Login Failed: ${result}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('login-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testEmployeeLogin() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'employe1@mail.com',
+                        password: 'password123'
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    authToken = result.token;
+                    document.getElementById('login-results').innerHTML =
+                        `<div class="success">✅ Employee Login Success:<br>
+                        Role: ${result.role}<br>
+                        Token: ${result.token.substring(0, 50)}...</div>`;
+                } else {
+                    document.getElementById('login-results').innerHTML =
+                        `<div class="error">❌ Employee Login Failed: ${result}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('login-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function loadAllUsers() {
+            try {
+                const response = await fetch('http://localhost:8080/api/users-test');
+                const users = await response.json();
+
+                let html = `<div class="success">✅ ${users.length} users loaded</div>`;
+                html += '<table><tr><th>ID</th><th>Username</th><th>Email</th><th>Roles</th><th>Points</th></tr>';
+
+                users.forEach(user => {
+                    const roles = user.roles ? user.roles.map(r => r.name).join(', ') : 'None';
+                    html += `<tr>
+                        <td>${user.id}</td>
+                        <td>${user.username}</td>
+                        <td>${user.email}</td>
+                        <td>${roles}</td>
+                        <td>${user.pointsFidelite || 0}</td>
+                    </tr>`;
+                });
+
+                html += '</table>';
+                document.getElementById('user-crud-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('user-crud-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function createTestUser() {
+            try {
+                const userData = {
+                    username: 'testuser_' + Date.now(),
+                    email: 'testuser_' + Date.now() + '@test.com',
+                    password: 'password123',
+                    telephone: '0123456789',
+                    pointsFidelite: 100
+                };
+
+                const response = await fetch('http://localhost:8080/api/admin-test/create-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const result = await response.text();
+                document.getElementById('user-crud-results').innerHTML =
+                    `<div class="success">✅ User Creation: ${result}</div>`;
+
+            } catch (error) {
+                document.getElementById('user-crud-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testUserRoles() {
+            try {
+                const response = await fetch('http://localhost:8080/api/users-test');
+                const users = await response.json();
+
+                const roleCounts = {};
+                users.forEach(user => {
+                    if (user.roles && user.roles.length > 0) {
+                        user.roles.forEach(role => {
+                            roleCounts[role.name] = (roleCounts[role.name] || 0) + 1;
+                        });
+                    } else {
+                        roleCounts['No Role'] = (roleCounts['No Role'] || 0) + 1;
+                    }
+                });
+
+                let html = '<div class="success">✅ User Roles Analysis:</div><ul>';
+                Object.entries(roleCounts).forEach(([role, count]) => {
+                    html += `<li><strong>${role}:</strong> ${count} users</li>`;
+                });
+                html += '</ul>';
+
+                document.getElementById('roles-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('roles-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function searchUsers() {
+            const searchTerm = document.getElementById('search-email').value;
+            try {
+                const response = await fetch('http://localhost:8080/api/users-test');
+                const users = await response.json();
+
+                const filteredUsers = users.filter(user =>
+                    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    user.username.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+
+                let html = `<div class="success">✅ Found ${filteredUsers.length} users matching "${searchTerm}"</div>`;
+                filteredUsers.forEach(user => {
+                    html += `<div class="user-card">
+                        <strong>${user.username}</strong> (${user.email})<br>
+                        Roles: ${user.roles ? user.roles.map(r => r.name).join(', ') : 'None'}<br>
+                        Points: ${user.pointsFidelite || 0}
+                    </div>`;
+                });
+
+                document.getElementById('search-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('search-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function filterByRole() {
+            try {
+                const response = await fetch('http://localhost:8080/api/users-test');
+                const users = await response.json();
+
+                const roleGroups = {};
+                users.forEach(user => {
+                    if (user.roles && user.roles.length > 0) {
+                        user.roles.forEach(role => {
+                            if (!roleGroups[role.name]) {
+                                roleGroups[role.name] = [];
+                            }
+                            roleGroups[role.name].push(user);
+                        });
+                    } else {
+                        if (!roleGroups['No Role']) {
+                            roleGroups['No Role'] = [];
+                        }
+                        roleGroups['No Role'].push(user);
+                    }
+                });
+
+                let html = '<div class="success">✅ Users grouped by role:</div>';
+                Object.entries(roleGroups).forEach(([role, users]) => {
+                    html += `<h4>${role} (${users.length} users)</h4>`;
+                    users.forEach(user => {
+                        html += `<div class="user-card">
+                            <strong>${user.username}</strong> - ${user.email}
+                        </div>`;
+                    });
+                });
+
+                document.getElementById('search-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('search-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function getUserStats() {
+            try {
+                const response = await fetch('http://localhost:8080/api/users-test');
+                const users = await response.json();
+
+                const stats = {
+                    total: users.length,
+                    withRoles: users.filter(u => u.roles && u.roles.length > 0).length,
+                    withoutRoles: users.filter(u => !u.roles || u.roles.length === 0).length,
+                    totalPoints: users.reduce((sum, u) => sum + (u.pointsFidelite || 0), 0),
+                    avgPoints: 0
+                };
+
+                stats.avgPoints = stats.total > 0 ? Math.round(stats.totalPoints / stats.total) : 0;
+
+                let html = '<div class="success">✅ User Statistics:</div>';
+                html += `<ul>
+                    <li><strong>Total Users:</strong> ${stats.total}</li>
+                    <li><strong>Users with Roles:</strong> ${stats.withRoles}</li>
+                    <li><strong>Users without Roles:</strong> ${stats.withoutRoles}</li>
+                    <li><strong>Total Points:</strong> ${stats.totalPoints}</li>
+                    <li><strong>Average Points:</strong> ${stats.avgPoints}</li>
+                </ul>`;
+
+                document.getElementById('stats-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('stats-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-load users on page load
+        window.addEventListener('load', function () {
+            setTimeout(loadAllUsers, 1000);
+        });
+    </script>
+</body>
+
+</html>

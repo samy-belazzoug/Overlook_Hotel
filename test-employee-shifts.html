@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Employee Shifts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .shift-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        .shift-morning {
+            background-color: #e3f2fd;
+        }
+
+        .shift-afternoon {
+            background-color: #fff3e0;
+        }
+
+        .shift-evening {
+            background-color: #f3e5f5;
+        }
+
+        .shift-night {
+            background-color: #e8f5e8;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>👷 Test Employee Shifts</h1>
+
+    <div class="test">
+        <h3>1. Test Employee Authentication</h3>
+        <button onclick="testEmployeeLogin()">Login as Employee</button>
+        <button onclick="testEmployeeAccess()">Test Employee Access</button>
+        <div id="employee-auth-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Test Shift Data Management</h3>
+        <button onclick="loadEmployeeShifts()">Load Employee Shifts</button>
+        <button onclick="createTestShift()">Create Test Shift</button>
+        <button onclick="updateTestShift()">Update Test Shift</button>
+        <div id="shift-data-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Test Shift Scheduling</h3>
+        <button onclick="testShiftScheduling()">Test Shift Scheduling</button>
+        <button onclick="testShiftConflicts()">Test Shift Conflicts</button>
+        <button onclick="testShiftCoverage()">Test Shift Coverage</button>
+        <div id="shift-scheduling-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>4. Test Shift Search & Filter</h3>
+        <input type="date" id="shift-date" style="padding: 5px; margin: 5px;">
+        <select id="shift-type" style="padding: 5px; margin: 5px;">
+            <option value="">All Shifts</option>
+            <option value="morning">Morning</option>
+            <option value="afternoon">Afternoon</option>
+            <option value="evening">Evening</option>
+            <option value="night">Night</option>
+        </select>
+        <button onclick="searchShifts()">Search Shifts</button>
+        <button onclick="filterByType()">Filter by Type</button>
+        <div id="shift-search-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>5. Test Shift Statistics</h3>
+        <button onclick="getShiftStats()">Get Shift Statistics</button>
+        <button onclick="getEmployeeWorkload()">Get Employee Workload</button>
+        <div id="shift-stats-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>6. Test Shift Calendar View</h3>
+        <button onclick="generateShiftCalendar()">Generate Shift Calendar</button>
+        <button onclick="testShiftRotation()">Test Shift Rotation</button>
+        <div id="shift-calendar-results"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let testShiftId = null;
+
+        // Mock shift data for testing
+        const mockShifts = [
+            { id: 1, employeeId: 1, employeeName: 'John Doe', date: '2025-09-29', startTime: '08:00', endTime: '16:00', type: 'morning', status: 'scheduled' },
+            { id: 2, employeeId: 2, employeeName: 'Jane Smith', date: '2025-09-29', startTime: '16:00', endTime: '00:00', type: 'evening', status: 'scheduled' },
+            { id: 3, employeeId: 3, employeeName: 'Bob Johnson', date: '2025-09-30', startTime: '00:00', endTime: '08:00', type: 'night', status: 'scheduled' },
+            { id: 4, employeeId: 1, employeeName: 'John Doe', date: '2025-09-30', startTime: '08:00', endTime: '16:00', type: 'morning', status: 'completed' },
+            { id: 5, employeeId: 2, employeeName: 'Jane Smith', date: '2025-10-01', startTime: '12:00', endTime: '20:00', type: 'afternoon', status: 'scheduled' }
+        ];
+
+        async function testEmployeeLogin() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'employe1@mail.com',
+                        password: 'password123'
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    authToken = result.token;
+                    document.getElementById('employee-auth-results').innerHTML =
+                        `<div class="success">✅ Employee Login Success:<br>
+                        Role: ${result.role}<br>
+                        Token: ${result.token.substring(0, 50)}...</div>`;
+                } else {
+                    document.getElementById('employee-auth-results').innerHTML =
+                        `<div class="error">❌ Employee Login Failed: ${result}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('employee-auth-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testEmployeeAccess() {
+            try {
+                // Test if employee can access their own data
+                const response = await fetch('http://localhost:8080/api/users-test');
+                const users = await response.json();
+
+                const employees = users.filter(user =>
+                    user.roles && user.roles.some(role => role.name === 'EMPLOYE')
+                );
+
+                let html = `<div class="success">✅ Employee Access Test:<br>
+                Found ${employees.length} employees in the system</div>`;
+
+                employees.forEach(employee => {
+                    html += `<div class="shift-card">
+                        <strong>${employee.username}</strong> (${employee.email})<br>
+                        Employee ID: ${employee.id}<br>
+                        Roles: ${employee.roles.map(r => r.name).join(', ')}
+                    </div>`;
+                });
+
+                document.getElementById('employee-auth-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('employee-auth-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function loadEmployeeShifts() {
+            try {
+                let html = `<div class="success">✅ ${mockShifts.length} shifts loaded (mock data)</div>`;
+                html += '<table><tr><th>ID</th><th>Employee</th><th>Date</th><th>Time</th><th>Type</th><th>Status</th></tr>';
+
+                mockShifts.forEach(shift => {
+                    const typeClass = `shift-${shift.type}`;
+                    html += `<tr class="${typeClass}">
+                        <td>${shift.id}</td>
+                        <td>${shift.employeeName}</td>
+                        <td>${shift.date}</td>
+                        <td>${shift.startTime} - ${shift.endTime}</td>
+                        <td>${shift.type}</td>
+                        <td>${shift.status}</td>
+                    </tr>`;
+                });
+
+                html += '</table>';
+                document.getElementById('shift-data-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-data-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function createTestShift() {
+            try {
+                const newShift = {
+                    id: mockShifts.length + 1,
+                    employeeId: 1,
+                    employeeName: 'Test Employee',
+                    date: new Date().toISOString().split('T')[0],
+                    startTime: '09:00',
+                    endTime: '17:00',
+                    type: 'morning',
+                    status: 'scheduled'
+                };
+
+                mockShifts.push(newShift);
+                testShiftId = newShift.id;
+
+                document.getElementById('shift-data-results').innerHTML =
+                    `<div class="success">✅ Test shift created:<br>
+                    Employee: ${newShift.employeeName}<br>
+                    Date: ${newShift.date}<br>
+                    Time: ${newShift.startTime} - ${newShift.endTime}<br>
+                    Type: ${newShift.type}</div>`;
+
+            } catch (error) {
+                document.getElementById('shift-data-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function updateTestShift() {
+            try {
+                if (!testShiftId) {
+                    document.getElementById('shift-data-results').innerHTML =
+                        `<div class="error">❌ No test shift to update. Create one first.</div>`;
+                    return;
+                }
+
+                const shift = mockShifts.find(s => s.id === testShiftId);
+                if (shift) {
+                    shift.status = 'completed';
+                    shift.endTime = '18:00';
+
+                    document.getElementById('shift-data-results').innerHTML =
+                        `<div class="success">✅ Test shift updated:<br>
+                        Status: ${shift.status}<br>
+                        End Time: ${shift.endTime}</div>`;
+                }
+
+            } catch (error) {
+                document.getElementById('shift-data-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testShiftScheduling() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+                let html = '<div class="success">✅ Shift Scheduling Test:</div>';
+                html += '<ul>';
+                html += `<li><strong>Today's Shifts:</strong> ${mockShifts.filter(s => s.date === today).length}</li>`;
+                html += `<li><strong>Tomorrow's Shifts:</strong> ${mockShifts.filter(s => s.date === tomorrow).length}</li>`;
+                html += `<li><strong>Total Scheduled Shifts:</strong> ${mockShifts.filter(s => s.status === 'scheduled').length}</li>`;
+                html += `<li><strong>Completed Shifts:</strong> ${mockShifts.filter(s => s.status === 'completed').length}</li>`;
+                html += '</ul>';
+
+                document.getElementById('shift-scheduling-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-scheduling-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testShiftConflicts() {
+            try {
+                const conflicts = [];
+                const today = new Date().toISOString().split('T')[0];
+                const todayShifts = mockShifts.filter(s => s.date === today);
+
+                // Check for overlapping shifts
+                for (let i = 0; i < todayShifts.length; i++) {
+                    for (let j = i + 1; j < todayShifts.length; j++) {
+                        const shift1 = todayShifts[i];
+                        const shift2 = todayShifts[j];
+
+                        if (shift1.employeeId === shift2.employeeId) {
+                            conflicts.push(`${shift1.employeeName} has overlapping shifts: ${shift1.startTime}-${shift1.endTime} and ${shift2.startTime}-${shift2.endTime}`);
+                        }
+                    }
+                }
+
+                let html = '<div class="success">✅ Shift Conflict Analysis:</div>';
+                if (conflicts.length === 0) {
+                    html += '<p>No conflicts found in today\'s schedule.</p>';
+                } else {
+                    html += '<ul>';
+                    conflicts.forEach(conflict => {
+                        html += `<li class="error">⚠️ ${conflict}</li>`;
+                    });
+                    html += '</ul>';
+                }
+
+                document.getElementById('shift-scheduling-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-scheduling-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testShiftCoverage() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const todayShifts = mockShifts.filter(s => s.date === today);
+
+                const coverage = {
+                    morning: todayShifts.filter(s => s.type === 'morning').length,
+                    afternoon: todayShifts.filter(s => s.type === 'afternoon').length,
+                    evening: todayShifts.filter(s => s.type === 'evening').length,
+                    night: todayShifts.filter(s => s.type === 'night').length
+                };
+
+                let html = '<div class="success">✅ Shift Coverage Analysis for ' + today + ':</div>';
+                html += '<ul>';
+                Object.entries(coverage).forEach(([type, count]) => {
+                    const status = count > 0 ? '✅ Covered' : '❌ Not Covered';
+                    html += `<li><strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${count} employees (${status})</li>`;
+                });
+                html += '</ul>';
+
+                document.getElementById('shift-scheduling-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-scheduling-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function searchShifts() {
+            const searchDate = document.getElementById('shift-date').value;
+            try {
+                let filteredShifts = mockShifts;
+
+                if (searchDate) {
+                    filteredShifts = mockShifts.filter(shift => shift.date === searchDate);
+                }
+
+                let html = `<div class="success">✅ Found ${filteredShifts.length} shifts`;
+                if (searchDate) {
+                    html += ` for ${searchDate}`;
+                }
+                html += '</div>';
+
+                filteredShifts.forEach(shift => {
+                    const typeClass = `shift-${shift.type}`;
+                    html += `<div class="shift-card ${typeClass}">
+                        <strong>${shift.employeeName}</strong> - ${shift.type} shift<br>
+                        ${shift.date} from ${shift.startTime} to ${shift.endTime}<br>
+                        Status: ${shift.status}
+                    </div>`;
+                });
+
+                document.getElementById('shift-search-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-search-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function filterByType() {
+            const shiftType = document.getElementById('shift-type').value;
+            try {
+                let filteredShifts = mockShifts;
+
+                if (shiftType) {
+                    filteredShifts = mockShifts.filter(shift => shift.type === shiftType);
+                }
+
+                let html = `<div class="success">✅ Found ${filteredShifts.length} shifts`;
+                if (shiftType) {
+                    html += ` of type "${shiftType}"`;
+                }
+                html += '</div>';
+
+                filteredShifts.forEach(shift => {
+                    const typeClass = `shift-${shift.type}`;
+                    html += `<div class="shift-card ${typeClass}">
+                        <strong>${shift.employeeName}</strong> - ${shift.type} shift<br>
+                        ${shift.date} from ${shift.startTime} to ${shift.endTime}<br>
+                        Status: ${shift.status}
+                    </div>`;
+                });
+
+                document.getElementById('shift-search-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-search-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function getShiftStats() {
+            try {
+                const stats = {
+                    total: mockShifts.length,
+                    scheduled: mockShifts.filter(s => s.status === 'scheduled').length,
+                    completed: mockShifts.filter(s => s.status === 'completed').length,
+                    byType: {
+                        morning: mockShifts.filter(s => s.type === 'morning').length,
+                        afternoon: mockShifts.filter(s => s.type === 'afternoon').length,
+                        evening: mockShifts.filter(s => s.type === 'evening').length,
+                        night: mockShifts.filter(s => s.type === 'night').length
+                    }
+                };
+
+                let html = '<div class="success">✅ Shift Statistics:</div>';
+                html += `<ul>
+                    <li><strong>Total Shifts:</strong> ${stats.total}</li>
+                    <li><strong>Scheduled:</strong> ${stats.scheduled}</li>
+                    <li><strong>Completed:</strong> ${stats.completed}</li>
+                    <li><strong>By Type:</strong></li>
+                    <ul>
+                        <li>Morning: ${stats.byType.morning}</li>
+                        <li>Afternoon: ${stats.byType.afternoon}</li>
+                        <li>Evening: ${stats.byType.evening}</li>
+                        <li>Night: ${stats.byType.night}</li>
+                    </ul>
+                </ul>`;
+
+                document.getElementById('shift-stats-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-stats-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function getEmployeeWorkload() {
+            try {
+                const employeeWorkload = {};
+
+                mockShifts.forEach(shift => {
+                    if (!employeeWorkload[shift.employeeId]) {
+                        employeeWorkload[shift.employeeId] = {
+                            name: shift.employeeName,
+                            totalShifts: 0,
+                            scheduledShifts: 0,
+                            completedShifts: 0
+                        };
+                    }
+
+                    employeeWorkload[shift.employeeId].totalShifts++;
+                    if (shift.status === 'scheduled') {
+                        employeeWorkload[shift.employeeId].scheduledShifts++;
+                    } else if (shift.status === 'completed') {
+                        employeeWorkload[shift.employeeId].completedShifts++;
+                    }
+                });
+
+                let html = '<div class="success">✅ Employee Workload Analysis:</div>';
+                Object.values(employeeWorkload).forEach(employee => {
+                    html += `<div class="shift-card">
+                        <strong>${employee.name}</strong><br>
+                        Total Shifts: ${employee.totalShifts}<br>
+                        Scheduled: ${employee.scheduledShifts}<br>
+                        Completed: ${employee.completedShifts}
+                    </div>`;
+                });
+
+                document.getElementById('shift-stats-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-stats-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function generateShiftCalendar() {
+            try {
+                const calendar = {};
+
+                mockShifts.forEach(shift => {
+                    if (!calendar[shift.date]) {
+                        calendar[shift.date] = [];
+                    }
+                    calendar[shift.date].push(shift);
+                });
+
+                let html = '<div class="success">✅ Shift Calendar:</div>';
+                Object.entries(calendar).sort().forEach(([date, shifts]) => {
+                    html += `<h4>${date}</h4>`;
+                    shifts.forEach(shift => {
+                        const typeClass = `shift-${shift.type}`;
+                        html += `<div class="shift-card ${typeClass}">
+                            ${shift.employeeName} - ${shift.type} (${shift.startTime}-${shift.endTime})
+                        </div>`;
+                    });
+                });
+
+                document.getElementById('shift-calendar-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-calendar-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testShiftRotation() {
+            try {
+                const employees = [...new Set(mockShifts.map(s => s.employeeId))];
+                const rotation = [];
+
+                // Simple rotation logic
+                employees.forEach(employeeId => {
+                    const employeeShifts = mockShifts.filter(s => s.employeeId === employeeId);
+                    const employeeName = employeeShifts[0]?.employeeName || 'Unknown';
+
+                    rotation.push({
+                        employeeId,
+                        name: employeeName,
+                        shifts: employeeShifts.length,
+                        lastShift: employeeShifts[employeeShifts.length - 1]?.date || 'Never'
+                    });
+                });
+
+                let html = '<div class="success">✅ Shift Rotation Analysis:</div>';
+                rotation.forEach(emp => {
+                    html += `<div class="shift-card">
+                        <strong>${emp.name}</strong><br>
+                        Total Shifts: ${emp.shifts}<br>
+                        Last Shift: ${emp.lastShift}
+                    </div>`;
+                });
+
+                document.getElementById('shift-calendar-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('shift-calendar-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-load shifts on page load
+        window.addEventListener('load', function () {
+            setTimeout(loadEmployeeShifts, 1000);
+        });
+    </script>
+</body>
+
+</html>

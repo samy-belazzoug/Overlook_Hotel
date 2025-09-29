@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Simple - Overlook Hotel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🏨 Test Simple - Overlook Hotel</h1>
+
+    <div class="test">
+        <h3>1. Test API des chambres</h3>
+        <button onclick="testRooms()">Tester les chambres</button>
+        <div id="rooms-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Créer utilisateur coucou@mail.com</h3>
+        <button onclick="createUser()">Créer utilisateur</button>
+        <div id="create-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Test de connexion</h3>
+        <button onclick="testLogin()">Se connecter</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>4. Test avec token</h3>
+        <button onclick="testWithToken()">Tester avec token</button>
+        <div id="token-result"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function testRooms() {
+            try {
+                const response = await fetch('http://localhost:8080/api/rooms');
+                const data = await response.json();
+                document.getElementById('rooms-result').innerHTML =
+                    '<div class="success">✅ API des chambres fonctionne<br>Nombre de chambres: ' + data.length + '</div>';
+            } catch (error) {
+                document.getElementById('rooms-result').innerHTML =
+                    '<div class="error">❌ Erreur: ' + error.message + '</div>';
+            }
+        }
+
+        async function createUser() {
+            try {
+                const response = await fetch('http://localhost:8080/api/test/create-user', {
+                    method: 'POST'
+                });
+                const data = await response.text();
+                document.getElementById('create-result').innerHTML =
+                    '<div class="success">✅ ' + data + '</div>';
+            } catch (error) {
+                document.getElementById('create-result').innerHTML =
+                    '<div class="error">❌ Erreur: ' + error.message + '</div>';
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'coucou@mail.com',
+                        password: 'password123'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    document.getElementById('login-result').innerHTML =
+                        '<div class="success">✅ Connexion réussie!<br>' +
+                        'Token: ' + data.token.substring(0, 50) + '...<br>' +
+                        'Rôle: ' + data.role + '</div>';
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('login-result').innerHTML =
+                        '<div class="error">❌ Erreur ' + response.status + ': ' + errorText + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('login-result').innerHTML =
+                    '<div class="error">❌ Erreur: ' + error.message + '</div>';
+            }
+        }
+
+        async function testWithToken() {
+            if (!authToken) {
+                document.getElementById('token-result').innerHTML =
+                    '<div class="error">❌ Veuillez d\'abord vous connecter</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/rooms', {
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('token-result').innerHTML =
+                    '<div class="success">✅ Requête avec token réussie!<br>Chambres: ' + data.length + '</div>';
+            } catch (error) {
+                document.getElementById('token-result').innerHTML =
+                    '<div class="error">❌ Erreur: ' + error.message + '</div>';
+            }
+        }
+
+        // Test automatique au chargement
+        window.onload = function () {
+            testRooms();
+        };
+    </script>
+</body>
+
+</html>

@@ -55,27 +55,44 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            Authentication auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
-            SecurityContextHolder.getContext().setAuthentication(auth);
-            
-            // Trouver l'utilisateur pour obtenir le rôle
+            // Chercher l'utilisateur dans userRepository d'abord
             Optional<User> user = userRepository.findByEmail(request.getEmail());
+            String role = "CLIENT"; // Rôle par défaut
+            boolean loginSuccess = false;
+            
             if (user.isPresent()) {
-                String role = user.get().getRoles().isEmpty() ? "CLIENT" : user.get().getRoles().iterator().next().getName();
-                String token = jwtUtil.generateToken(request.getEmail(), role);
-                
-                Map<String, String> response = new HashMap<>();
-                response.put("token", token);
-                response.put("role", role);
-                response.put("message", "Login réussi");
-                
-                return ResponseEntity.ok(response);
+                // Utilisateur trouvé dans la table users
+                User foundUser = user.get();
+                if (passwordEncoder.matches(request.getPassword(), foundUser.getPassword())) {
+                    role = foundUser.getRoles().isEmpty() ? "CLIENT" : foundUser.getRoles().iterator().next().getName();
+                    loginSuccess = true;
+                }
+            } else {
+                // Chercher dans gestionnaireRepository
+                Optional<Gestionnaire> gestionnaire = gestionnaireRepository.findByEmail(request.getEmail());
+                if (gestionnaire.isPresent()) {
+                    Gestionnaire foundGestionnaire = gestionnaire.get();
+                    if (passwordEncoder.matches(request.getPassword(), foundGestionnaire.getMotDePasse())) {
+                        role = foundGestionnaire.getRole();
+                        loginSuccess = true;
+                    }
+                }
             }
-            return ResponseEntity.badRequest().body("Utilisateur non trouvé");
+            
+            if (!loginSuccess) {
+                return ResponseEntity.badRequest().body("Email ou mot de passe incorrect");
+            }
+            
+            String token = jwtUtil.generateToken(request.getEmail(), role);
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("token", token);
+            response.put("role", role);
+            response.put("message", "Login réussi");
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Email ou mot de passe incorrect");
+            return ResponseEntity.badRequest().body("Erreur lors de la connexion: " + e.getMessage());
         }
     }
 

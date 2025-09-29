@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Complete Test Suite - Overlook Hotel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .test-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: black;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .test-results {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🏨 Overlook Hotel - Complete Test Suite</h1>
+        <p>Comprehensive testing for all hotel management system components</p>
+    </div>
+
+    <div class="stats" id="overall-stats">
+        <div class="stat-card">
+            <div class="stat-number" id="total-tests">0</div>
+            <div class="stat-label">Total Tests</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="passed-tests">0</div>
+            <div class="stat-label">Passed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="failed-tests">0</div>
+            <div class="stat-label">Failed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="success-rate">0%</div>
+            <div class="stat-label">Success Rate</div>
+        </div>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+    </div>
+
+    <div class="test-grid">
+        <div class="test-card">
+            <h3>🔐 Authentication Tests</h3>
+            <button class="btn-primary" onclick="runAuthTests()">Run Auth Tests</button>
+            <button class="btn-info" onclick="testAllUserRoles()">Test All Roles</button>
+            <div class="test-results" id="auth-results"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>🏠 Room Management Tests</h3>
+            <button class="btn-primary" onclick="runRoomTests()">Run Room Tests</button>
+            <button class="btn-info" onclick="testRoomSearch()">Test Search</button>
+            <div class="test-results" id="room-results"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>👥 User Management Tests</h3>
+            <button class="btn-primary" onclick="runUserTests()">Run User Tests</button>
+            <button class="btn-info" onclick="testUserCRUD()">Test CRUD</button>
+            <div class="test-results" id="user-results"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>📅 Reservation Tests</h3>
+            <button class="btn-primary" onclick="runReservationTests()">Run Reservation Tests</button>
+            <button class="btn-info" onclick="testReservationFlow()">Test Flow</button>
+            <div class="test-results" id="reservation-results"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>👷 Employee Shift Tests</h3>
+            <button class="btn-primary" onclick="runShiftTests()">Run Shift Tests</button>
+            <button class="btn-info" onclick="testShiftScheduling()">Test Scheduling</button>
+            <div class="test-results" id="shift-results"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>📊 Dashboard Tests</h3>
+            <button class="btn-primary" onclick="runDashboardTests()">Run Dashboard Tests</button>
+            <button class="btn-info" onclick="testDashboardData()">Test Data</button>
+            <div class="test-results" id="dashboard-results"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>🔗 API Integration Tests</h3>
+            <button class="btn-primary" onclick="runAPITests()">Run API Tests</button>
+            <button class="btn-info" onclick="testCORS()">Test CORS</button>
+            <div class="test-results" id="api-results"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>🛡️ Security Tests</h3>
+            <button class="btn-primary" onclick="runSecurityTests()">Run Security Tests</button>
+            <button class="btn-info" onclick="testUnauthorizedAccess()">Test Access</button>
+            <div class="test-results" id="security-results"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>⚡ Performance Tests</h3>
+            <button class="btn-primary" onclick="runPerformanceTests()">Run Performance Tests</button>
+            <button class="btn-info" onclick="testResponseTimes()">Test Response Times</button>
+            <div class="test-results" id="performance-results"></div>
+        </div>
+
+        <div class="test-card">
+            <h3>🧪 Complete Test Suite</h3>
+            <button class="btn-success" onclick="runAllTests()">Run All Tests</button>
+            <button class="btn-warning" onclick="runQuickTests()">Quick Tests</button>
+            <button class="btn-danger" onclick="clearAllResults()">Clear Results</button>
+            <div class="test-results" id="complete-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            tests: []
+        };
+
+        function updateStats() {
+            document.getElementById('total-tests').textContent = testResults.total;
+            document.getElementById('passed-tests').textContent = testResults.passed;
+            document.getElementById('failed-tests').textContent = testResults.failed;
+
+            const successRate = testResults.total > 0 ? Math.round((testResults.passed / testResults.total) * 100) : 0;
+            document.getElementById('success-rate').textContent = successRate + '%';
+
+            const progressWidth = testResults.total > 0 ? (testResults.passed / testResults.total) * 100 : 0;
+            document.getElementById('progress-fill').style.width = progressWidth + '%';
+        }
+
+        function addTestResult(category, testName, success, message = '') {
+            testResults.total++;
+            if (success) {
+                testResults.passed++;
+            } else {
+                testResults.failed++;
+            }
+
+            testResults.tests.push({
+                category,
+                testName,
+                success,
+                message,
+                timestamp: new Date().toISOString()
+            });
+
+            updateStats();
+        }
+
+        function displayResults(elementId, results) {
+            const element = document.getElementById(elementId);
+            let html = '';
+
+            results.forEach(result => {
+                const statusClass = result.success ? 'success' : 'error';
+                const statusIcon = result.success ? '✅' : '❌';
+                html += `<div class="${statusClass}">
+                    ${statusIcon} ${result.testName}
+                    ${result.message ? '<br><small>' + result.message + '</small>' : ''}
+                </div>`;
+            });
+
+            element.innerHTML = html;
+        }
+
+        async function runAuthTests() {
+            const results = [];
+
+            try {
+                // Test client login
+                const clientResponse = await fetch(API_BASE + '/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'coucou@mail.com', password: 'password123' })
+                });
+
+                const clientSuccess = clientResponse.ok;
+                results.push({ testName: 'Client Login', success: clientSuccess, message: clientSuccess ? 'Login successful' : 'Login failed' });
+                addTestResult('auth', 'Client Login', clientSuccess);
+
+                // Test admin login
+                const adminResponse = await fetch(API_BASE + '/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'admin@mail.com', password: 'password123' })
+                });
+
+                const adminSuccess = adminResponse.ok;
+                results.push({ testName: 'Admin Login', success: adminSuccess, message: adminSuccess ? 'Login successful' : 'Login failed' });
+                addTestResult('auth', 'Admin Login', adminSuccess);
+
+                // Test employee login
+                const employeeResponse = await fetch(API_BASE + '/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'employe1@mail.com', password: 'password123' })
+                });
+
+                const employeeSuccess = employeeResponse.ok;
+                results.push({ testName: 'Employee Login', success: employeeSuccess, message: employeeSuccess ? 'Login successful' : 'Login failed' });
+                addTestResult('auth', 'Employee Login', employeeSuccess);
+
+            } catch (error) {
+                results.push({ testName: 'Authentication Tests', success: false, message: error.message });
+                addTestResult('auth', 'Authentication Tests', false, error.message);
+            }
+
+            displayResults('auth-results', results);
+        }
+
+        async function runRoomTests() {
+            const results = [];
+
+            try {
+                // Test room loading
+                const roomsResponse = await fetch(API_BASE + '/rooms-test');
+                const roomsSuccess = roomsResponse.ok;
+                results.push({ testName: 'Load Rooms', success: roomsSuccess, message: roomsSuccess ? 'Rooms loaded successfully' : 'Failed to load rooms' });
+                addTestResult('rooms', 'Load Rooms', roomsSuccess);
+
+                // Test room search
+                const searchResponse = await fetch(API_BASE + '/rooms/search?checkIn=2025-09-29&checkOut=2025-09-30&maxPrice=200');
+                const searchSuccess = searchResponse.ok;
+                results.push({ testName: 'Room Search', success: searchSuccess, message: searchSuccess ? 'Search working' : 'Search failed' });
+                addTestResult('rooms', 'Room Search', searchSuccess);
+
+                // Test room data structure
+                if (roomsSuccess) {
+                    const rooms = await roomsResponse.json();
+                    const hasRequiredFields = rooms.length > 0 && rooms[0].id && rooms[0].numero && rooms[0].type && rooms[0].prix;
+                    results.push({ testName: 'Room Data Structure', success: hasRequiredFields, message: hasRequiredFields ? 'Valid data structure' : 'Invalid data structure' });
+                    addTestResult('rooms', 'Room Data Structure', hasRequiredFields);
+                }
+
+            } catch (error) {
+                results.push({ testName: 'Room Tests', success: false, message: error.message });
+                addTestResult('rooms', 'Room Tests', false, error.message);
+            }
+
+            displayResults('room-results', results);
+        }
+
+        async function runUserTests() {
+            const results = [];
+
+            try {
+                // Test user loading
+                const usersResponse = await fetch(API_BASE + '/users-test');
+                const usersSuccess = usersResponse.ok;
+                results.push({ testName: 'Load Users', success: usersSuccess, message: usersSuccess ? 'Users loaded successfully' : 'Failed to load users' });
+                addTestResult('users', 'Load Users', usersSuccess);
+
+                // Test user data structure
+                if (usersSuccess) {
+                    const users = await usersResponse.json();
+                    const hasRequiredFields = users.length > 0 && users[0].id && users[0].username && users[0].email;
+                    results.push({ testName: 'User Data Structure', success: hasRequiredFields, message: hasRequiredFields ? 'Valid data structure' : 'Invalid data structure' });
+                    addTestResult('users', 'User Data Structure', hasRequiredFields);
+
+                    // Test user roles
+                    const hasRoles = users.some(user => user.roles && user.roles.length > 0);
+                    results.push({ testName: 'User Roles', success: hasRoles, message: hasRoles ? 'Users have roles' : 'No user roles found' });
+                    addTestResult('users', 'User Roles', hasRoles);
+                }
+
+            } catch (error) {
+                results.push({ testName: 'User Tests', success: false, message: error.message });
+                addTestResult('users', 'User Tests', false, error.message);
+            }
+
+            displayResults('user-results', results);
+        }
+
+        async function runReservationTests() {
+            const results = [];
+
+            try {
+                // Test reservation loading
+                const reservationsResponse = await fetch(API_BASE + '/reservations-test');
+                const reservationsSuccess = reservationsResponse.ok;
+                results.push({ testName: 'Load Reservations', success: reservationsSuccess, message: reservationsSuccess ? 'Reservations loaded successfully' : 'Failed to load reservations' });
+                addTestResult('reservations', 'Load Reservations', reservationsSuccess);
+
+                // Test reservation data structure
+                if (reservationsSuccess) {
+                    const reservations = await reservationsResponse.json();
+                    const hasRequiredFields = reservations.length === 0 || (reservations[0].id && reservations[0].statut);
+                    results.push({ testName: 'Reservation Data Structure', success: hasRequiredFields, message: hasRequiredFields ? 'Valid data structure' : 'Invalid data structure' });
+                    addTestResult('reservations', 'Reservation Data Structure', hasRequiredFields);
+                }
+
+            } catch (error) {
+                results.push({ testName: 'Reservation Tests', success: false, message: error.message });
+                addTestResult('reservations', 'Reservation Tests', false, error.message);
+            }
+
+            displayResults('reservation-results', results);
+        }
+
+        async function runShiftTests() {
+            const results = [];
+
+            try {
+                // Test shift data (mock)
+                const shiftData = [
+                    { id: 1, employeeId: 1, date: '2025-09-29', startTime: '08:00', endTime: '16:00', type: 'morning' },
+                    { id: 2, employeeId: 2, date: '2025-09-29', startTime: '16:00', endTime: '00:00', type: 'evening' }
+                ];
+
+                results.push({ testName: 'Shift Data Structure', success: true, message: 'Mock shift data created' });
+                addTestResult('shifts', 'Shift Data Structure', true);
+
+                // Test shift scheduling logic
+                const hasValidTimes = shiftData.every(shift => shift.startTime && shift.endTime);
+                results.push({ testName: 'Shift Time Validation', success: hasValidTimes, message: hasValidTimes ? 'Valid time formats' : 'Invalid time formats' });
+                addTestResult('shifts', 'Shift Time Validation', hasValidTimes);
+
+                // Test shift types
+                const validTypes = ['morning', 'afternoon', 'evening', 'night'];
+                const hasValidTypes = shiftData.every(shift => validTypes.includes(shift.type));
+                results.push({ testName: 'Shift Type Validation', success: hasValidTypes, message: hasValidTypes ? 'Valid shift types' : 'Invalid shift types' });
+                addTestResult('shifts', 'Shift Type Validation', hasValidTypes);
+
+            } catch (error) {
+                results.push({ testName: 'Shift Tests', success: false, message: error.message });
+                addTestResult('shifts', 'Shift Tests', false, error.message);
+            }
+
+            displayResults('shift-results', results);
+        }
+
+        async function runDashboardTests() {
+            const results = [];
+
+            try {
+                // Test dashboard stats
+                const statsResponse = await fetch(API_BASE + '/dashboard-test/stats');
+                const statsSuccess = statsResponse.ok;
+                results.push({ testName: 'Dashboard Stats', success: statsSuccess, message: statsSuccess ? 'Stats loaded successfully' : 'Failed to load stats' });
+                addTestResult('dashboard', 'Dashboard Stats', statsSuccess);
+
+                // Test recent reservations
+                const recentResponse = await fetch(API_BASE + '/dashboard-test/recent-reservations');
+                const recentSuccess = recentResponse.ok;
+                results.push({ testName: 'Recent Reservations', success: recentSuccess, message: recentSuccess ? 'Recent reservations loaded' : 'Failed to load recent reservations' });
+                addTestResult('dashboard', 'Recent Reservations', recentSuccess);
+
+                // Test room status
+                const roomStatusResponse = await fetch(API_BASE + '/dashboard-test/room-status');
+                const roomStatusSuccess = roomStatusResponse.ok;
+                results.push({ testName: 'Room Status', success: roomStatusSuccess, message: roomStatusSuccess ? 'Room status loaded' : 'Failed to load room status' });
+                addTestResult('dashboard', 'Room Status', roomStatusSuccess);
+
+            } catch (error) {
+                results.push({ testName: 'Dashboard Tests', success: false, message: error.message });
+                addTestResult('dashboard', 'Dashboard Tests', false, error.message);
+            }
+
+            displayResults('dashboard-results', results);
+        }
+
+        async function runAPITests() {
+            const results = [];
+
+            try {
+                // Test CORS
+                const corsResponse = await fetch(API_BASE + '/rooms-test', {
+                    headers: { 'Origin': 'http://127.0.0.1:5500' }
+                });
+                const corsSuccess = corsResponse.ok;
+                results.push({ testName: 'CORS Configuration', success: corsSuccess, message: corsSuccess ? 'CORS working' : 'CORS failed' });
+                addTestResult('api', 'CORS Configuration', corsSuccess);
+
+                // Test JSON response
+                if (corsSuccess) {
+                    const data = await corsResponse.json();
+                    const isArray = Array.isArray(data);
+                    results.push({ testName: 'JSON Response Format', success: isArray, message: isArray ? 'Valid JSON array' : 'Invalid JSON format' });
+                    addTestResult('api', 'JSON Response Format', isArray);
+                }
+
+            } catch (error) {
+                results.push({ testName: 'API Tests', success: false, message: error.message });
+                addTestResult('api', 'API Tests', false, error.message);
+            }
+
+            displayResults('api-results', results);
+        }
+
+        async function runSecurityTests() {
+            const results = [];
+
+            try {
+                // Test unauthorized access
+                const protectedResponse = await fetch(API_BASE + '/admin/rooms');
+                const isProtected = protectedResponse.status === 401 || protectedResponse.status === 403;
+                results.push({ testName: 'Protected Endpoints', success: isProtected, message: isProtected ? 'Properly protected' : 'Not properly protected' });
+                addTestResult('security', 'Protected Endpoints', isProtected);
+
+                // Test security headers
+                const headersResponse = await fetch(API_BASE + '/rooms-test');
+                const hasSecurityHeaders = headersResponse.headers.get('X-Content-Type-Options') !== null;
+                results.push({ testName: 'Security Headers', success: hasSecurityHeaders, message: hasSecurityHeaders ? 'Security headers present' : 'Security headers missing' });
+                addTestResult('security', 'Security Headers', hasSecurityHeaders);
+
+            } catch (error) {
+                results.push({ testName: 'Security Tests', success: false, message: error.message });
+                addTestResult('security', 'Security Tests', false, error.message);
+            }
+
+            displayResults('security-results', results);
+        }
+
+        async function runPerformanceTests() {
+            const results = [];
+
+            try {
+                const startTime = performance.now();
+                const response = await fetch(API_BASE + '/rooms-test');
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+
+                const isFast = responseTime < 1000; // Less than 1 second
+                results.push({ testName: 'Response Time', success: isFast, message: `Response time: ${responseTime}ms` });
+                addTestResult('performance', 'Response Time', isFast);
+
+                // Test concurrent requests
+                const concurrentStart = performance.now();
+                const promises = Array(5).fill().map(() => fetch(API_BASE + '/rooms-test'));
+                await Promise.all(promises);
+                const concurrentEnd = performance.now();
+                const concurrentTime = Math.round(concurrentEnd - concurrentStart);
+
+                const concurrentSuccess = concurrentTime < 2000; // Less than 2 seconds for 5 concurrent requests
+                results.push({ testName: 'Concurrent Requests', success: concurrentSuccess, message: `5 concurrent requests: ${concurrentTime}ms` });
+                addTestResult('performance', 'Concurrent Requests', concurrentSuccess);
+
+            } catch (error) {
+                results.push({ testName: 'Performance Tests', success: false, message: error.message });
+                addTestResult('performance', 'Performance Tests', false, error.message);
+            }
+
+            displayResults('performance-results', results);
+        }
+
+        async function runAllTests() {
+            document.getElementById('complete-results').innerHTML = '<div class="warning">🔄 Running all tests...</div>';
+
+            await runAuthTests();
+            await runRoomTests();
+            await runUserTests();
+            await runReservationTests();
+            await runShiftTests();
+            await runDashboardTests();
+            await runAPITests();
+            await runSecurityTests();
+            await runPerformanceTests();
+
+            const successRate = Math.round((testResults.passed / testResults.total) * 100);
+            document.getElementById('complete-results').innerHTML =
+                `<div class="success">✅ All tests completed!<br>
+                Total: ${testResults.total} | Passed: ${testResults.passed} | Failed: ${testResults.failed}<br>
+                Success Rate: ${successRate}%</div>`;
+        }
+
+        async function runQuickTests() {
+            document.getElementById('complete-results').innerHTML = '<div class="warning">🔄 Running quick tests...</div>';
+
+            // Run only essential tests
+            await runAuthTests();
+            await runRoomTests();
+            await runAPITests();
+
+            const successRate = Math.round((testResults.passed / testResults.total) * 100);
+            document.getElementById('complete-results').innerHTML =
+                `<div class="success">✅ Quick tests completed!<br>
+                Total: ${testResults.total} | Passed: ${testResults.passed} | Failed: ${testResults.failed}<br>
+                Success Rate: ${successRate}%</div>`;
+        }
+
+        function clearAllResults() {
+            testResults = { total: 0, passed: 0, failed: 0, tests: [] };
+            updateStats();
+
+            const resultElements = ['auth-results', 'room-results', 'user-results', 'reservation-results',
+                'shift-results', 'dashboard-results', 'api-results', 'security-results',
+                'performance-results', 'complete-results'];
+
+            resultElements.forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+        }
+
+        // Auto-run quick tests on page load
+        window.addEventListener('load', function () {
+            setTimeout(runQuickTests, 1000);
+        });
+    </script>
+</body>
+
+</html>

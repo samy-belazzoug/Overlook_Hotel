@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test API Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        .api-test {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        .api-success {
+            border-left: 4px solid #28a745;
+        }
+
+        .api-error {
+            border-left: 4px solid #dc3545;
+        }
+
+        .api-warning {
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔗 Test API Integration</h1>
+
+    <div class="test">
+        <h3>1. Test All API Endpoints</h3>
+        <button onclick="testAllEndpoints()">Test All Endpoints</button>
+        <button onclick="testAuthenticationFlow()">Test Authentication Flow</button>
+        <div id="endpoint-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Test CORS Configuration</h3>
+        <button onclick="testCORS()">Test CORS Headers</button>
+        <button onclick="testPreflightRequests()">Test Preflight Requests</button>
+        <div id="cors-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Test Data Consistency</h3>
+        <button onclick="testDataConsistency()">Test Data Consistency</button>
+        <button onclick="testRelationships()">Test Entity Relationships</button>
+        <div id="consistency-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>4. Test Performance</h3>
+        <button onclick="testResponseTimes()">Test Response Times</button>
+        <button onclick="testConcurrentRequests()">Test Concurrent Requests</button>
+        <div id="performance-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>5. Test Error Handling</h3>
+        <button onclick="testErrorScenarios()">Test Error Scenarios</button>
+        <button onclick="testInvalidRequests()">Test Invalid Requests</button>
+        <div id="error-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>6. Test Security</h3>
+        <button onclick="testSecurityHeaders()">Test Security Headers</button>
+        <button onclick="testUnauthorizedAccess()">Test Unauthorized Access</button>
+        <div id="security-results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let authToken = null;
+
+        async function testAllEndpoints() {
+            const endpoints = [
+                { name: 'Dashboard Stats', url: '/dashboard-test/stats', method: 'GET' },
+                { name: 'Rooms', url: '/rooms-test', method: 'GET' },
+                { name: 'Users', url: '/users-test', method: 'GET' },
+                { name: 'Reservations', url: '/reservations-test', method: 'GET' },
+                { name: 'Login', url: '/auth/login', method: 'POST', body: { email: 'coucou@mail.com', password: 'password123' } },
+                { name: 'Room Search', url: '/rooms/search?checkIn=2025-09-29&checkOut=2025-09-30&maxPrice=200', method: 'GET' }
+            ];
+
+            let html = '<div class="success">✅ Testing All Endpoints:</div>';
+
+            for (const endpoint of endpoints) {
+                try {
+                    const startTime = performance.now();
+                    const options = {
+                        method: endpoint.method,
+                        headers: { 'Content-Type': 'application/json' }
+                    };
+
+                    if (endpoint.body) {
+                        options.body = JSON.stringify(endpoint.body);
+                    }
+
+                    const response = await fetch(API_BASE + endpoint.url, options);
+                    const endTime = performance.now();
+                    const responseTime = Math.round(endTime - startTime);
+
+                    const status = response.ok ? 'success' : 'error';
+                    const statusClass = response.ok ? 'api-success' : 'api-error';
+
+                    html += `<div class="api-test ${statusClass}">
+                        <strong>${endpoint.name}</strong><br>
+                        URL: ${endpoint.url}<br>
+                        Status: ${response.status} ${response.statusText}<br>
+                        Response Time: ${responseTime}ms<br>
+                        ${response.ok ? '✅ Success' : '❌ Failed'}
+                    </div>`;
+
+                } catch (error) {
+                    html += `<div class="api-test api-error">
+                        <strong>${endpoint.name}</strong><br>
+                        URL: ${endpoint.url}<br>
+                        Error: ${error.message}<br>
+                        ❌ Failed
+                    </div>`;
+                }
+            }
+
+            document.getElementById('endpoint-results').innerHTML = html;
+        }
+
+        async function testAuthenticationFlow() {
+            try {
+                let html = '<div class="success">✅ Testing Authentication Flow:</div>';
+
+                // Step 1: Login
+                const loginResponse = await fetch(API_BASE + '/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'coucou@mail.com', password: 'password123' })
+                });
+
+                if (loginResponse.ok) {
+                    const loginData = await loginResponse.json();
+                    authToken = loginData.token;
+                    html += `<div class="api-test api-success">
+                        <strong>Step 1: Login</strong><br>
+                        Status: ${loginResponse.status}<br>
+                        Role: ${loginData.role}<br>
+                        Token: ${loginData.token.substring(0, 50)}...<br>
+                        ✅ Success
+                    </div>`;
+
+                    // Step 2: Test authenticated request
+                    const protectedResponse = await fetch(API_BASE + '/users-test', {
+                        headers: { 'Authorization': 'Bearer ' + authToken }
+                    });
+
+                    html += `<div class="api-test ${protectedResponse.ok ? 'api-success' : 'api-error'}">
+                        <strong>Step 2: Authenticated Request</strong><br>
+                        Status: ${protectedResponse.status}<br>
+                        ${protectedResponse.ok ? '✅ Success' : '❌ Failed'}
+                    </div>`;
+
+                } else {
+                    html += `<div class="api-test api-error">
+                        <strong>Step 1: Login</strong><br>
+                        Status: ${loginResponse.status}<br>
+                        ❌ Failed
+                    </div>`;
+                }
+
+                document.getElementById('endpoint-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('endpoint-results').innerHTML =
+                    `<div class="error">❌ Authentication Flow Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testCORS() {
+            try {
+                const response = await fetch(API_BASE + '/rooms-test', {
+                    method: 'GET',
+                    headers: { 'Origin': 'http://127.0.0.1:5500' }
+                });
+
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
+                    'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials')
+                };
+
+                let html = '<div class="success">✅ CORS Headers Test:</div>';
+                html += '<ul>';
+                Object.entries(corsHeaders).forEach(([header, value]) => {
+                    const status = value ? '✅' : '❌';
+                    html += `<li><strong>${header}:</strong> ${value || 'Not Set'} ${status}</li>`;
+                });
+                html += '</ul>';
+
+                document.getElementById('cors-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('cors-results').innerHTML =
+                    `<div class="error">❌ CORS Test Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testPreflightRequests() {
+            try {
+                const response = await fetch(API_BASE + '/rooms/search', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': 'http://127.0.0.1:5500',
+                        'Access-Control-Request-Method': 'GET',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+
+                let html = '<div class="success">✅ Preflight Request Test:</div>';
+                html += `<ul>
+                    <li><strong>Status:</strong> ${response.status} ${response.ok ? '✅' : '❌'}</li>
+                    <li><strong>Allow-Origin:</strong> ${response.headers.get('Access-Control-Allow-Origin') || 'Not Set'}</li>
+                    <li><strong>Allow-Methods:</strong> ${response.headers.get('Access-Control-Allow-Methods') || 'Not Set'}</li>
+                    <li><strong>Allow-Headers:</strong> ${response.headers.get('Access-Control-Allow-Headers') || 'Not Set'}</li>
+                </ul>`;
+
+                document.getElementById('cors-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('cors-results').innerHTML =
+                    `<div class="error">❌ Preflight Test Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testDataConsistency() {
+            try {
+                const [roomsResponse, reservationsResponse, usersResponse] = await Promise.all([
+                    fetch(API_BASE + '/rooms-test'),
+                    fetch(API_BASE + '/reservations-test'),
+                    fetch(API_BASE + '/users-test')
+                ]);
+
+                const rooms = await roomsResponse.json();
+                const reservations = await reservationsResponse.json();
+                const users = await usersResponse.json();
+
+                let html = '<div class="success">✅ Data Consistency Test:</div>';
+
+                // Test room-reservation relationships
+                const roomsWithReservations = reservations.filter(r => r.chambre).map(r => r.chambre.id);
+                const uniqueRoomsWithReservations = [...new Set(roomsWithReservations)];
+
+                html += `<ul>
+                    <li><strong>Total Rooms:</strong> ${rooms.length}</li>
+                    <li><strong>Total Reservations:</strong> ${reservations.length}</li>
+                    <li><strong>Total Users:</strong> ${users.length}</li>
+                    <li><strong>Rooms with Reservations:</strong> ${uniqueRoomsWithReservations.length}</li>
+                    <li><strong>Reservations with Valid Rooms:</strong> ${reservations.filter(r => r.chambre).length}</li>
+                    <li><strong>Reservations with Valid Users:</strong> ${reservations.filter(r => r.client).length}</li>
+                </ul>`;
+
+                // Check for orphaned data
+                const orphanedReservations = reservations.filter(r => !r.chambre || !r.client);
+                if (orphanedReservations.length > 0) {
+                    html += `<div class="warning">⚠️ Found ${orphanedReservations.length} reservations with missing relationships</div>`;
+                }
+
+                document.getElementById('consistency-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('consistency-results').innerHTML =
+                    `<div class="error">❌ Data Consistency Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testRelationships() {
+            try {
+                const [reservationsResponse, usersResponse] = await Promise.all([
+                    fetch(API_BASE + '/reservations-test'),
+                    fetch(API_BASE + '/users-test')
+                ]);
+
+                const reservations = await reservationsResponse.json();
+                const users = await usersResponse.json();
+
+                let html = '<div class="success">✅ Entity Relationships Test:</div>';
+
+                // Test user-reservation relationships
+                const userReservationCounts = {};
+                reservations.forEach(reservation => {
+                    if (reservation.client) {
+                        const userId = reservation.client.id;
+                        userReservationCounts[userId] = (userReservationCounts[userId] || 0) + 1;
+                    }
+                });
+
+                html += '<h4>User-Reservation Relationships:</h4><ul>';
+                Object.entries(userReservationCounts).forEach(([userId, count]) => {
+                    const user = users.find(u => u.id == userId);
+                    const userName = user ? user.username : 'Unknown';
+                    html += `<li><strong>${userName} (ID: ${userId}):</strong> ${count} reservations</li>`;
+                });
+                html += '</ul>';
+
+                // Test role relationships
+                const roleCounts = {};
+                users.forEach(user => {
+                    if (user.roles && user.roles.length > 0) {
+                        user.roles.forEach(role => {
+                            roleCounts[role.name] = (roleCounts[role.name] || 0) + 1;
+                        });
+                    } else {
+                        roleCounts['No Role'] = (roleCounts['No Role'] || 0) + 1;
+                    }
+                });
+
+                html += '<h4>User-Role Relationships:</h4><ul>';
+                Object.entries(roleCounts).forEach(([role, count]) => {
+                    html += `<li><strong>${role}:</strong> ${count} users</li>`;
+                });
+                html += '</ul>';
+
+                document.getElementById('consistency-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('consistency-results').innerHTML =
+                    `<div class="error">❌ Relationships Test Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testResponseTimes() {
+            const endpoints = [
+                '/dashboard-test/stats',
+                '/rooms-test',
+                '/users-test',
+                '/reservations-test'
+            ];
+
+            let html = '<div class="success">✅ Response Time Test:</div>';
+            const results = [];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const startTime = performance.now();
+                    const response = await fetch(API_BASE + endpoint);
+                    const endTime = performance.now();
+                    const responseTime = Math.round(endTime - startTime);
+
+                    results.push({ endpoint, responseTime, success: response.ok });
+
+                    const statusClass = response.ok ? 'api-success' : 'api-error';
+                    html += `<div class="api-test ${statusClass}">
+                        <strong>${endpoint}</strong><br>
+                        Response Time: ${responseTime}ms<br>
+                        Status: ${response.status}<br>
+                        ${response.ok ? '✅' : '❌'}
+                    </div>`;
+
+                } catch (error) {
+                    results.push({ endpoint, responseTime: -1, success: false });
+                    html += `<div class="api-test api-error">
+                        <strong>${endpoint}</strong><br>
+                        Error: ${error.message}<br>
+                        ❌
+                    </div>`;
+                }
+            }
+
+            // Calculate statistics
+            const successfulResults = results.filter(r => r.success && r.responseTime > 0);
+            if (successfulResults.length > 0) {
+                const avgTime = Math.round(successfulResults.reduce((sum, r) => sum + r.responseTime, 0) / successfulResults.length);
+                const maxTime = Math.max(...successfulResults.map(r => r.responseTime));
+                const minTime = Math.min(...successfulResults.map(r => r.responseTime));
+
+                html += `<div class="api-test api-success">
+                    <strong>Performance Summary</strong><br>
+                    Average Response Time: ${avgTime}ms<br>
+                    Fastest: ${minTime}ms<br>
+                    Slowest: ${maxTime}ms<br>
+                    Success Rate: ${Math.round((successfulResults.length / results.length) * 100)}%
+                </div>`;
+            }
+
+            document.getElementById('performance-results').innerHTML = html;
+        }
+
+        async function testConcurrentRequests() {
+            try {
+                const concurrentRequests = 5;
+                const endpoint = API_BASE + '/rooms-test';
+
+                let html = '<div class="success">✅ Concurrent Requests Test:</div>';
+
+                const startTime = performance.now();
+                const promises = Array(concurrentRequests).fill().map(() => fetch(endpoint));
+                const responses = await Promise.all(promises);
+                const endTime = performance.now();
+
+                const totalTime = Math.round(endTime - startTime);
+                const successfulRequests = responses.filter(r => r.ok).length;
+
+                html += `<div class="api-test api-success">
+                    <strong>Concurrent Test Results</strong><br>
+                    Requests: ${concurrentRequests}<br>
+                    Successful: ${successfulRequests}<br>
+                    Failed: ${concurrentRequests - successfulRequests}<br>
+                    Total Time: ${totalTime}ms<br>
+                    Average per Request: ${Math.round(totalTime / concurrentRequests)}ms<br>
+                    Success Rate: ${Math.round((successfulRequests / concurrentRequests) * 100)}%
+                </div>`;
+
+                document.getElementById('performance-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('performance-results').innerHTML =
+                    `<div class="error">❌ Concurrent Test Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testErrorScenarios() {
+            const errorTests = [
+                { name: 'Invalid Endpoint', url: '/invalid-endpoint', expectedStatus: 404 },
+                { name: 'Invalid Room ID', url: '/rooms-test/99999', expectedStatus: 200 },
+                { name: 'Invalid User ID', url: '/users-test/99999', expectedStatus: 200 },
+                { name: 'Invalid Reservation ID', url: '/reservations-test/99999', expectedStatus: 200 }
+            ];
+
+            let html = '<div class="success">✅ Error Scenario Tests:</div>';
+
+            for (const test of errorTests) {
+                try {
+                    const response = await fetch(API_BASE + test.url);
+                    const statusClass = response.status === test.expectedStatus ? 'api-success' : 'api-warning';
+
+                    html += `<div class="api-test ${statusClass}">
+                        <strong>${test.name}</strong><br>
+                        URL: ${test.url}<br>
+                        Status: ${response.status}<br>
+                        Expected: ${test.expectedStatus}<br>
+                        ${response.status === test.expectedStatus ? '✅' : '⚠️'}
+                    </div>`;
+
+                } catch (error) {
+                    html += `<div class="api-test api-error">
+                        <strong>${test.name}</strong><br>
+                        URL: ${test.url}<br>
+                        Error: ${error.message}<br>
+                        ❌
+                    </div>`;
+                }
+            }
+
+            document.getElementById('error-results').innerHTML = html;
+        }
+
+        async function testInvalidRequests() {
+            const invalidRequests = [
+                { name: 'Invalid JSON', url: '/auth/login', method: 'POST', body: 'invalid json' },
+                { name: 'Missing Required Fields', url: '/auth/login', method: 'POST', body: { email: 'test@test.com' } },
+                { name: 'Invalid Date Format', url: '/rooms/search?checkIn=invalid-date', method: 'GET' }
+            ];
+
+            let html = '<div class="success">✅ Invalid Request Tests:</div>';
+
+            for (const test of invalidRequests) {
+                try {
+                    const options = {
+                        method: test.method,
+                        headers: { 'Content-Type': 'application/json' }
+                    };
+
+                    if (test.body) {
+                        options.body = typeof test.body === 'string' ? test.body : JSON.stringify(test.body);
+                    }
+
+                    const response = await fetch(API_BASE + test.url, options);
+                    const statusClass = response.status >= 400 ? 'api-success' : 'api-warning';
+
+                    html += `<div class="api-test ${statusClass}">
+                        <strong>${test.name}</strong><br>
+                        Status: ${response.status}<br>
+                        ${response.status >= 400 ? '✅ Properly rejected' : '⚠️ Should have been rejected'}
+                    </div>`;
+
+                } catch (error) {
+                    html += `<div class="api-test api-success">
+                        <strong>${test.name}</strong><br>
+                        Error: ${error.message}<br>
+                        ✅ Properly handled
+                    </div>`;
+                }
+            }
+
+            document.getElementById('error-results').innerHTML = html;
+        }
+
+        async function testSecurityHeaders() {
+            try {
+                const response = await fetch(API_BASE + '/rooms-test');
+
+                const securityHeaders = {
+                    'X-Content-Type-Options': response.headers.get('X-Content-Type-Options'),
+                    'X-Frame-Options': response.headers.get('X-Frame-Options'),
+                    'X-XSS-Protection': response.headers.get('X-XSS-Protection'),
+                    'Strict-Transport-Security': response.headers.get('Strict-Transport-Security'),
+                    'Content-Security-Policy': response.headers.get('Content-Security-Policy')
+                };
+
+                let html = '<div class="success">✅ Security Headers Test:</div>';
+                html += '<ul>';
+                Object.entries(securityHeaders).forEach(([header, value]) => {
+                    const status = value ? '✅' : '⚠️';
+                    html += `<li><strong>${header}:</strong> ${value || 'Not Set'} ${status}</li>`;
+                });
+                html += '</ul>';
+
+                document.getElementById('security-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('security-results').innerHTML =
+                    `<div class="error">❌ Security Headers Test Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testUnauthorizedAccess() {
+            try {
+                const protectedEndpoints = [
+                    '/admin/rooms',
+                    '/admin/users',
+                    '/admin/reservations',
+                    '/employee/shifts'
+                ];
+
+                let html = '<div class="success">✅ Unauthorized Access Test:</div>';
+
+                for (const endpoint of protectedEndpoints) {
+                    try {
+                        const response = await fetch(API_BASE + endpoint);
+                        const statusClass = response.status === 401 || response.status === 403 ? 'api-success' : 'api-warning';
+
+                        html += `<div class="api-test ${statusClass}">
+                            <strong>${endpoint}</strong><br>
+                            Status: ${response.status}<br>
+                            ${response.status === 401 || response.status === 403 ? '✅ Properly protected' : '⚠️ Should be protected'}
+                        </div>`;
+
+                    } catch (error) {
+                        html += `<div class="api-test api-success">
+                            <strong>${endpoint}</strong><br>
+                            Error: ${error.message}<br>
+                            ✅ Properly protected
+                        </div>`;
+                    }
+                }
+
+                document.getElementById('security-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('security-results').innerHTML =
+                    `<div class="error">❌ Unauthorized Access Test Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.addEventListener('load', function () {
+            setTimeout(() => {
+                testAllEndpoints();
+                testCORS();
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>

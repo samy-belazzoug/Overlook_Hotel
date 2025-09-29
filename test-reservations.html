@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Reservations Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .reservation-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        .status-active {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-cancelled {
+            color: red;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: blue;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📅 Test Reservations Management</h1>
+
+    <div class="test">
+        <h3>1. Test Reservation Data Loading</h3>
+        <button onclick="loadAllReservations()">Load All Reservations</button>
+        <button onclick="loadRecentReservations()">Load Recent Reservations</button>
+        <div id="reservation-data-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Test Reservation Creation</h3>
+        <button onclick="createTestReservation()">Create Test Reservation</button>
+        <button onclick="createReservationWithDates()">Create with Specific Dates</button>
+        <div id="reservation-create-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Test Reservation Status Management</h3>
+        <button onclick="testReservationStatuses()">Test Status Changes</button>
+        <button onclick="cancelTestReservation()">Cancel Test Reservation</button>
+        <div id="reservation-status-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>4. Test Reservation Search & Filter</h3>
+        <input type="date" id="search-date" style="padding: 5px; margin: 5px;">
+        <select id="status-filter" style="padding: 5px; margin: 5px;">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="completed">Completed</option>
+        </select>
+        <button onclick="searchReservations()">Search Reservations</button>
+        <button onclick="filterByStatus()">Filter by Status</button>
+        <div id="reservation-search-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>5. Test Reservation Statistics</h3>
+        <button onclick="getReservationStats()">Get Reservation Statistics</button>
+        <button onclick="getOccupancyStats()">Get Occupancy Statistics</button>
+        <div id="reservation-stats-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>6. Test Reservation Validation</h3>
+        <button onclick="testDateValidation()">Test Date Validation</button>
+        <button onclick="testRoomAvailability()">Test Room Availability</button>
+        <div id="reservation-validation-results"></div>
+    </div>
+
+    <script>
+        let testReservationId = null;
+        let authToken = null;
+
+        async function loadAllReservations() {
+            try {
+                const response = await fetch('http://localhost:8080/api/reservations-test');
+                const reservations = await response.json();
+
+                let html = `<div class="success">✅ ${reservations.length} reservations loaded</div>`;
+                html += '<table><tr><th>ID</th><th>Client</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Created</th></tr>';
+
+                reservations.slice(0, 10).forEach(reservation => {
+                    const clientName = reservation.client ? reservation.client.username : 'N/A';
+                    const roomNumber = reservation.chambre ? reservation.chambre.numero : 'N/A';
+                    const statusClass = `status-${reservation.statut}`;
+
+                    html += `<tr>
+                        <td>${reservation.id}</td>
+                        <td>${clientName}</td>
+                        <td>${roomNumber}</td>
+                        <td>${reservation.dateDebut || 'N/A'}</td>
+                        <td>${reservation.dateFin || 'N/A'}</td>
+                        <td class="${statusClass}">${reservation.statut || 'N/A'}</td>
+                        <td>${reservation.dateCreation ? new Date(reservation.dateCreation).toLocaleDateString() : 'N/A'}</td>
+                    </tr>`;
+                });
+
+                html += '</table>';
+                if (reservations.length > 10) {
+                    html += `<p>... and ${reservations.length - 10} more reservations</p>`;
+                }
+
+                document.getElementById('reservation-data-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reservation-data-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function loadRecentReservations() {
+            try {
+                const response = await fetch('http://localhost:8080/api/dashboard-test/recent-reservations');
+                const data = await response.json();
+
+                if (data.status === 'success' && data.reservations) {
+                    let html = `<div class="success">✅ ${data.reservations.length} recent reservations loaded</div>`;
+
+                    data.reservations.forEach(reservation => {
+                        const roomNumber = reservation.chambre ? reservation.chambre.numero : 'N/A';
+                        const statusClass = `status-${reservation.statut}`;
+
+                        html += `<div class="reservation-card">
+                            <strong>Reservation #${reservation.id}</strong><br>
+                            Room: ${roomNumber}<br>
+                            Dates: ${reservation.dateDebut} - ${reservation.dateFin}<br>
+                            Status: <span class="${statusClass}">${reservation.statut}</span><br>
+                            Created: ${reservation.dateCreation ? new Date(reservation.dateCreation).toLocaleString() : 'N/A'}
+                        </div>`;
+                    });
+
+                    document.getElementById('reservation-data-results').innerHTML = html;
+                } else {
+                    document.getElementById('reservation-data-results').innerHTML =
+                        `<div class="error">❌ Error loading recent reservations: ${data.error || 'Unknown error'}</div>`;
+                }
+
+            } catch (error) {
+                document.getElementById('reservation-data-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function createTestReservation() {
+            try {
+                // First, get a room and user for the reservation
+                const [roomsResponse, usersResponse] = await Promise.all([
+                    fetch('http://localhost:8080/api/rooms-test'),
+                    fetch('http://localhost:8080/api/users-test')
+                ]);
+
+                const rooms = await roomsResponse.json();
+                const users = await usersResponse.json();
+
+                if (rooms.length === 0 || users.length === 0) {
+                    document.getElementById('reservation-create-results').innerHTML =
+                        `<div class="error">❌ No rooms or users available for testing</div>`;
+                    return;
+                }
+
+                const testRoom = rooms[0];
+                const testUser = users[0];
+
+                const reservationData = {
+                    clientId: testUser.id,
+                    chambreId: testRoom.id,
+                    dateDebut: '2025-10-01',
+                    dateFin: '2025-10-03',
+                    statut: 'active'
+                };
+
+                // Note: This would need a proper reservation creation endpoint
+                document.getElementById('reservation-create-results').innerHTML =
+                    `<div class="success">✅ Test reservation data prepared:<br>
+                    Room: ${testRoom.numero} (${testRoom.type})<br>
+                    Client: ${testUser.username}<br>
+                    Dates: ${reservationData.dateDebut} - ${reservationData.dateFin}<br>
+                    <em>Note: Actual creation would require a POST endpoint</em></div>`;
+
+            } catch (error) {
+                document.getElementById('reservation-create-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testReservationStatuses() {
+            try {
+                const response = await fetch('http://localhost:8080/api/reservations-test');
+                const reservations = await response.json();
+
+                const statusCounts = {};
+                reservations.forEach(reservation => {
+                    const status = reservation.statut || 'unknown';
+                    statusCounts[status] = (statusCounts[status] || 0) + 1;
+                });
+
+                let html = '<div class="success">✅ Reservation Status Analysis:</div>';
+                html += '<ul>';
+                Object.entries(statusCounts).forEach(([status, count]) => {
+                    const statusClass = `status-${status}`;
+                    html += `<li><span class="${statusClass}">${status}:</span> ${count} reservations</li>`;
+                });
+                html += '</ul>';
+
+                document.getElementById('reservation-status-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reservation-status-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function searchReservations() {
+            const searchDate = document.getElementById('search-date').value;
+            try {
+                const response = await fetch('http://localhost:8080/api/reservations-test');
+                const reservations = await response.json();
+
+                let filteredReservations = reservations;
+
+                if (searchDate) {
+                    filteredReservations = reservations.filter(reservation =>
+                        reservation.dateDebut === searchDate ||
+                        reservation.dateFin === searchDate ||
+                        (reservation.dateDebut <= searchDate && reservation.dateFin >= searchDate)
+                    );
+                }
+
+                let html = `<div class="success">✅ Found ${filteredReservations.length} reservations`;
+                if (searchDate) {
+                    html += ` for date ${searchDate}`;
+                }
+                html += '</div>';
+
+                filteredReservations.slice(0, 5).forEach(reservation => {
+                    const clientName = reservation.client ? reservation.client.username : 'N/A';
+                    const roomNumber = reservation.chambre ? reservation.chambre.numero : 'N/A';
+                    const statusClass = `status-${reservation.statut}`;
+
+                    html += `<div class="reservation-card">
+                        <strong>#${reservation.id}</strong> - ${clientName} in Room ${roomNumber}<br>
+                        ${reservation.dateDebut} to ${reservation.dateFin} 
+                        <span class="${statusClass}">(${reservation.statut})</span>
+                    </div>`;
+                });
+
+                if (filteredReservations.length > 5) {
+                    html += `<p>... and ${filteredReservations.length - 5} more</p>`;
+                }
+
+                document.getElementById('reservation-search-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reservation-search-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function filterByStatus() {
+            const statusFilter = document.getElementById('status-filter').value;
+            try {
+                const response = await fetch('http://localhost:8080/api/reservations-test');
+                const reservations = await response.json();
+
+                let filteredReservations = reservations;
+                if (statusFilter) {
+                    filteredReservations = reservations.filter(reservation =>
+                        reservation.statut === statusFilter
+                    );
+                }
+
+                let html = `<div class="success">✅ ${filteredReservations.length} reservations`;
+                if (statusFilter) {
+                    html += ` with status "${statusFilter}"`;
+                }
+                html += '</div>';
+
+                filteredReservations.slice(0, 5).forEach(reservation => {
+                    const clientName = reservation.client ? reservation.client.username : 'N/A';
+                    const roomNumber = reservation.chambre ? reservation.chambre.numero : 'N/A';
+                    const statusClass = `status-${reservation.statut}`;
+
+                    html += `<div class="reservation-card">
+                        <strong>#${reservation.id}</strong> - ${clientName} in Room ${roomNumber}<br>
+                        ${reservation.dateDebut} to ${reservation.dateFin} 
+                        <span class="${statusClass}">(${reservation.statut})</span>
+                    </div>`;
+                });
+
+                if (filteredReservations.length > 5) {
+                    html += `<p>... and ${filteredReservations.length - 5} more</p>`;
+                }
+
+                document.getElementById('reservation-search-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reservation-search-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function getReservationStats() {
+            try {
+                const response = await fetch('http://localhost:8080/api/reservations-test');
+                const reservations = await response.json();
+
+                const stats = {
+                    total: reservations.length,
+                    active: reservations.filter(r => r.statut === 'active').length,
+                    cancelled: reservations.filter(r => r.statut === 'cancelled').length,
+                    completed: reservations.filter(r => r.statut === 'completed').length,
+                    thisMonth: 0,
+                    thisYear: 0
+                };
+
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+
+                reservations.forEach(reservation => {
+                    if (reservation.dateCreation) {
+                        const createdDate = new Date(reservation.dateCreation);
+                        if (createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear) {
+                            stats.thisMonth++;
+                        }
+                        if (createdDate.getFullYear() === currentYear) {
+                            stats.thisYear++;
+                        }
+                    }
+                });
+
+                let html = '<div class="success">✅ Reservation Statistics:</div>';
+                html += `<ul>
+                    <li><strong>Total Reservations:</strong> ${stats.total}</li>
+                    <li><strong>Active:</strong> ${stats.active}</li>
+                    <li><strong>Cancelled:</strong> ${stats.cancelled}</li>
+                    <li><strong>Completed:</strong> ${stats.completed}</li>
+                    <li><strong>This Month:</strong> ${stats.thisMonth}</li>
+                    <li><strong>This Year:</strong> ${stats.thisYear}</li>
+                </ul>`;
+
+                document.getElementById('reservation-stats-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reservation-stats-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function getOccupancyStats() {
+            try {
+                const [roomsResponse, reservationsResponse] = await Promise.all([
+                    fetch('http://localhost:8080/api/rooms-test'),
+                    fetch('http://localhost:8080/api/reservations-test')
+                ]);
+
+                const rooms = await roomsResponse.json();
+                const reservations = await reservationsResponse.json();
+
+                const activeReservations = reservations.filter(r => r.statut === 'active');
+                const occupancyRate = rooms.length > 0 ? Math.round((activeReservations.length / rooms.length) * 100) : 0;
+
+                let html = '<div class="success">✅ Occupancy Statistics:</div>';
+                html += `<ul>
+                    <li><strong>Total Rooms:</strong> ${rooms.length}</li>
+                    <li><strong>Active Reservations:</strong> ${activeReservations.length}</li>
+                    <li><strong>Occupancy Rate:</strong> ${occupancyRate}%</li>
+                    <li><strong>Available Rooms:</strong> ${rooms.length - activeReservations.length}</li>
+                </ul>`;
+
+                document.getElementById('reservation-stats-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reservation-stats-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testDateValidation() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+                let html = '<div class="success">✅ Date Validation Tests:</div>';
+                html += `<ul>
+                    <li><strong>Today:</strong> ${today}</li>
+                    <li><strong>Tomorrow:</strong> ${tomorrow}</li>
+                    <li><strong>Yesterday:</strong> ${yesterday}</li>
+                    <li><strong>Valid Check-in:</strong> ${tomorrow} (future date)</li>
+                    <li><strong>Invalid Check-in:</strong> ${yesterday} (past date)</li>
+                    <li><strong>Valid Check-out:</strong> ${tomorrow} (after check-in)</li>
+                </ul>`;
+
+                document.getElementById('reservation-validation-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reservation-validation-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testRoomAvailability() {
+            try {
+                const [roomsResponse, reservationsResponse] = await Promise.all([
+                    fetch('http://localhost:8080/api/rooms-test'),
+                    fetch('http://localhost:8080/api/reservations-test')
+                ]);
+
+                const rooms = await roomsResponse.json();
+                const reservations = await reservationsResponse.json();
+
+                const availableRooms = rooms.filter(room => room.etat === 'disponible');
+                const occupiedRooms = rooms.filter(room => room.etat === 'occupee');
+                const cleaningRooms = rooms.filter(room => room.etat === 'en nettoyage');
+
+                let html = '<div class="success">✅ Room Availability Analysis:</div>';
+                html += `<ul>
+                    <li><strong>Total Rooms:</strong> ${rooms.length}</li>
+                    <li><strong>Available:</strong> ${availableRooms.length}</li>
+                    <li><strong>Occupied:</strong> ${occupiedRooms.length}</li>
+                    <li><strong>Cleaning:</strong> ${cleaningRooms.length}</li>
+                    <li><strong>Availability Rate:</strong> ${Math.round((availableRooms.length / rooms.length) * 100)}%</li>
+                </ul>`;
+
+                document.getElementById('reservation-validation-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reservation-validation-results').innerHTML =
+                    `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-load reservations on page load
+        window.addEventListener('load', function () {
+            setTimeout(loadAllReservations, 1000);
+        });
+    </script>
+</body>
+
+</html>

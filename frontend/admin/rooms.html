@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Chambres - Overlook Hotel</title>
+    <meta name="description" content="Interface d'administration pour la gestion des chambres de l'hôtel Overlook.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/framework.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏨</text></svg>">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="flex items-center justify-between py-4">
+                <a href="../index.html" class="navbar-brand">
+                    🏨 Overlook Hotel - Admin
+                </a>
+
+                <ul class="navbar-nav">
+                    <li><a href="dashboard.html" class="navbar-link">Tableau de bord</a></li>
+                    <li><a href="rooms.html" class="navbar-link active">Chambres</a></li>
+                    <li><a href="users.html" class="navbar-link">Utilisateurs</a></li>
+                    <li><a href="reservations.html" class="navbar-link">Réservations</a></li>
+                    <li><a href="shifts.html" class="navbar-link">Plannings</a></li>
+                    <li>
+                        <button onclick="logout()" class="btn btn-ghost btn-sm">Déconnexion</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-8">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Gestion des Chambres</h1>
+                    <p class="text-lg text-gray-600">Gérez les chambres de l'hôtel</p>
+                </div>
+                <button onclick="showAddRoomModal()" class="btn btn-primary">
+                    ➕ Ajouter une chambre
+                </button>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="card mb-6">
+                <div class="card-body">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="form-group">
+                            <label for="search-input" class="form-label">Rechercher</label>
+                            <input type="text" id="search-input" class="form-input" placeholder="Numéro de chambre...">
+                        </div>
+                        <div class="form-group">
+                            <label for="type-filter" class="form-label">Type</label>
+                            <select id="type-filter" class="form-input form-select">
+                                <option value="">Tous les types</option>
+                                <option value="simple">Simple</option>
+                                <option value="double">Double</option>
+                                <option value="suite">Suite</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status-filter" class="form-label">Statut</label>
+                            <select id="status-filter" class="form-input form-select">
+                                <option value="">Tous les statuts</option>
+                                <option value="disponible">Disponible</option>
+                                <option value="occupee">Occupée</option>
+                                <option value="nettoyage">En nettoyage</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex items-end">
+                            <button onclick="filterRooms()" class="btn btn-outline w-full">
+                                🔍 Filtrer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="text-center py-12">
+                <div class="spinner spinner-lg mx-auto mb-4"></div>
+                <p class="text-gray-600">Chargement des chambres...</p>
+            </div>
+
+            <!-- Rooms Table -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Chambre
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Type
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Prix
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Statut
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="rooms-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Rooms will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Room Modal -->
+    <div id="roomModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="room-modal-title">Ajouter une chambre</h3>
+                <button class="modal-close" onclick="hideModal('roomModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="room-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="room-numero" class="form-label">Numéro de chambre</label>
+                            <input type="text" id="room-numero" name="numero" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="room-type" class="form-label">Type</label>
+                            <select id="room-type" name="type" class="form-input form-select" required>
+                                <option value="">Sélectionner un type</option>
+                                <option value="simple">Simple</option>
+                                <option value="double">Double</option>
+                                <option value="suite">Suite</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="room-prix" class="form-label">Prix (€)</label>
+                            <input type="number" id="room-prix" name="prix" class="form-input" step="0.01" min="0"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="room-etat" class="form-label">Statut</label>
+                            <select id="room-etat" name="etat" class="form-input form-select" required>
+                                <option value="disponible">Disponible</option>
+                                <option value="occupee">Occupée</option>
+                                <option value="nettoyage">En nettoyage</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="hideModal('roomModal')">Annuler</button>
+                <button type="submit" form="room-form" class="btn btn-primary" id="room-submit-btn">Ajouter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Supprimer la chambre</h3>
+                <button class="modal-close" onclick="hideModal('deleteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer cette chambre ?</p>
+                <div id="room-to-delete" class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <!-- Room details will be shown here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="hideModal('deleteModal')">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="confirmDelete()">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="text-center pt-8 border-t border-gray-700">
+                <p class="text-gray-400">&copy; 2025 Overlook Hotel. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/admin-rooms.js"></script>
+</body>
+
+</html>

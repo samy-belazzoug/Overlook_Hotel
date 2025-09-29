@@ -3,21 +3,259 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Overlook Hotel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlook Hotel - Votre séjour parfait vous attend</title>
+    <meta name="description"
+        content="Découvrez Overlook Hotel, votre destination de choix pour un séjour inoubliable. Réservez dès maintenant et profitez de nos chambres luxueuses.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/framework.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏨</text></svg>">
 </head>
 
 <body>
-    <h1> Overlook Hotel</h1>
-    <nav>
-        <ul>
-            <li><a href="client-events.html"> Client – Voir événements</a></li>
-            <li><a href="client-notifications.html"> Client – Mes notifications</a></li>
-            <li><a href="gestionnaire-events.html"> Gestionnaire – Gérer événements</a></li>
-            <li><a href="gestionnaire-send-notification.html"> Gestionnaire – Envoyer notification</a></li>
-            <li><a href="dashboard.html"> Dashboard</a></li>
-        </ul>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="flex items-center justify-between py-4">
+                <a href="index.html" class="navbar-brand">
+                    🏨 Overlook Hotel
+                </a>
+
+                <ul class="navbar-nav">
+                    <li><a href="index.html" class="navbar-link active">Accueil</a></li>
+                    <li><a href="#search" class="navbar-link">Rechercher</a></li>
+                    <li><a href="my-bookings.html" class="navbar-link">Mes réservations</a></li>
+                    <li>
+                        <div id="auth-buttons">
+                            <button onclick="showModal('loginModal')" class="btn btn-ghost">Connexion</button>
+                            <button onclick="showModal('registerModal')" class="btn btn-primary">S'inscrire</button>
+                        </div>
+                        <div id="user-menu" class="hidden">
+                            <span id="user-name" class="text-gray-600"></span>
+                            <button onclick="logout()" class="btn btn-ghost btn-sm">Déconnexion</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero-title fade-in">
+                Votre séjour parfait vous attend
+            </h1>
+            <p class="hero-subtitle fade-in">
+                Découvrez le confort et l'élégance dans nos chambres soigneusement sélectionnées
+            </p>
+            <div class="fade-in">
+                <button onclick="smoothScrollTo('search')" class="btn btn-secondary btn-lg">
+                    Rechercher une chambre
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Section -->
+    <section id="search" class="py-16">
+        <div class="container">
+            <!-- Search Filters -->
+            <div class="search-filters">
+                <form id="search-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="form-group">
+                        <label for="check-in" class="form-label">Arrivée</label>
+                        <input type="date" id="check-in" name="checkIn" class="form-input" min="getTodayDate()"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="check-out" class="form-label">Départ</label>
+                        <input type="date" id="check-out" name="checkOut" class="form-input" min="getTodayDate()"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="room-type" class="form-label">Type de chambre</label>
+                        <select id="room-type" name="type" class="form-input form-select">
+                            <option value="">Tous les types</option>
+                            <option value="simple">Simple</option>
+                            <option value="double">Double</option>
+                            <option value="suite">Suite</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max-price" class="form-label">Prix max (€)</label>
+                        <input type="number" id="max-price" name="maxPrice" class="form-input"
+                            placeholder="Prix maximum" min="0">
+                    </div>
+
+                    <div class="form-group flex items-end">
+                        <button type="submit" class="btn btn-primary w-full">
+                            Rechercher
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="hidden text-center py-12">
+                <div class="spinner spinner-lg mx-auto mb-4"></div>
+                <p class="text-gray-600">Recherche en cours...</p>
+            </div>
+
+            <!-- No Results -->
+            <div id="no-results" class="hidden text-center py-12">
+                <div class="text-6xl mb-4">🔍</div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Aucun résultat trouvé</h3>
+                <p class="text-gray-600 mb-6">Essayez de modifier vos critères de recherche</p>
+                <button onclick="resetSearch()" class="btn btn-outline">Réinitialiser</button>
+            </div>
+
+            <!-- Rooms Grid -->
+            <div id="rooms-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                <!-- Rooms will be dynamically loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="container">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Pourquoi choisir Overlook Hotel ?</h2>
+                <p class="text-lg text-gray-600">Découvrez les avantages qui font notre réputation</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="text-4xl mb-4">🛏️</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Confort exceptionnel</h3>
+                    <p class="text-gray-600">Nos chambres sont équipées du meilleur confort pour votre bien-être</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="text-4xl mb-4">📍</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Emplacement idéal</h3>
+                    <p class="text-gray-600">Situé au cœur de la ville, proche de tous les points d'intérêt</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="text-4xl mb-4">⭐</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Service premium</h3>
+                    <p class="text-gray-600">Notre équipe dévouée est à votre service 24h/24</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Overlook Hotel</h3>
+                    <p class="text-gray-400 mb-4">Votre destination de choix pour un séjour inoubliable dans le confort
+                        et l'élégance.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="#search">Rechercher</a></li>
+                        <li><a href="my-bookings.html">Mes réservations</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li>📞 +33 1 23 45 67 89</li>
+                        <li>✉️ contact@overlook-hotel.com</li>
+                        <li>📍 123 Avenue des Champs, Paris</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center pt-8 border-t border-gray-700">
+                <p class="text-gray-400">&copy; 2025 Overlook Hotel. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Connexion</h3>
+                <button class="modal-close" onclick="hideModal('loginModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-email" class="form-label">Email</label>
+                        <input type="email" id="login-email" name="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password" class="form-label">Mot de passe</label>
+                        <input type="password" id="login-password" name="password" class="form-input" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="hideModal('loginModal')">Annuler</button>
+                <button type="submit" form="login-form" class="btn btn-primary">Se connecter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Inscription</h3>
+                <button class="modal-close" onclick="hideModal('registerModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-email" class="form-label">Email</label>
+                        <input type="email" id="register-email" name="email" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password" class="form-label">Mot de passe</label>
+                        <input type="password" id="register-password" name="password" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-username" class="form-label">Nom d'utilisateur</label>
+                        <input type="text" id="register-username" name="username" class="form-input" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="hideModal('registerModal')">Annuler</button>
+                <button type="submit" form="register-form" class="btn btn-primary">S'inscrire</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/index.js"></script>
 </body>
 
 </html>

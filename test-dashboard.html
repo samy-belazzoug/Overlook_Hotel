@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Dashboard Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🏨 Test Dashboard Admin</h1>
+
+    <div class="test">
+        <h3>1. Connexion en tant qu'admin</h3>
+        <button onclick="loginAsAdmin()">Se connecter comme admin</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Test des données du dashboard</h3>
+        <button onclick="testDashboardData()">Charger les données</button>
+        <div id="dashboard-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Test des chambres admin</h3>
+        <button onclick="testAdminRooms()">Charger les chambres admin</button>
+        <div id="rooms-result"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function loginAsAdmin() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'coucou@mail.com',
+                        password: 'password123'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    document.getElementById('login-result').innerHTML =
+                        '<div class="success">✅ Connexion réussie!<br>' +
+                        'Token: ' + data.token.substring(0, 50) + '...<br>' +
+                        'Rôle: ' + data.role + '</div>';
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('login-result').innerHTML =
+                        '<div class="error">❌ Erreur ' + response.status + ': ' + errorText + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('login-result').innerHTML =
+                    '<div class="error">❌ Erreur: ' + error.message + '</div>';
+            }
+        }
+
+        async function testDashboardData() {
+            if (!authToken) {
+                document.getElementById('dashboard-result').innerHTML =
+                    '<div class="error">❌ Veuillez d\'abord vous connecter</div>';
+                return;
+            }
+
+            try {
+                // Test des statistiques
+                const [roomsResponse, reservationsResponse, usersResponse] = await Promise.all([
+                    fetch('http://localhost:8080/api/admin/rooms', {
+                        headers: { 'Authorization': 'Bearer ' + authToken }
+                    }),
+                    fetch('http://localhost:8080/api/admin/reservations', {
+                        headers: { 'Authorization': 'Bearer ' + authToken }
+                    }),
+                    fetch('http://localhost:8080/api/admin/users', {
+                        headers: { 'Authorization': 'Bearer ' + authToken }
+                    })
+                ]);
+
+                let result = '<div class="success">✅ Données du dashboard chargées:<br>';
+
+                if (roomsResponse.ok) {
+                    const rooms = await roomsResponse.json();
+                    result += `- Chambres: ${rooms.length}<br>`;
+                } else {
+                    result += `- Chambres: Erreur ${roomsResponse.status}<br>`;
+                }
+
+                if (reservationsResponse.ok) {
+                    const reservations = await reservationsResponse.json();
+                    result += `- Réservations: ${reservations.length}<br>`;
+                } else {
+                    result += `- Réservations: Erreur ${reservationsResponse.status}<br>`;
+                }
+
+                if (usersResponse.ok) {
+                    const users = await usersResponse.json();
+                    result += `- Utilisateurs: ${users.length}<br>`;
+                } else {
+                    result += `- Utilisateurs: Erreur ${usersResponse.status}<br>`;
+                }
+
+                result += '</div>';
+                document.getElementById('dashboard-result').innerHTML = result;
+
+            } catch (error) {
+                document.getElementById('dashboard-result').innerHTML =
+                    '<div class="error">❌ Erreur: ' + error.message + '</div>';
+            }
+        }
+
+        async function testAdminRooms() {
+            if (!authToken) {
+                document.getElementById('rooms-result').innerHTML =
+                    '<div class="error">❌ Veuillez d\'abord vous connecter</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/admin/rooms', {
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken
+                    }
+                });
+
+                if (response.ok) {
+                    const rooms = await response.json();
+                    document.getElementById('rooms-result').innerHTML =
+                        '<div class="success">✅ Chambres admin chargées: ' + rooms.length + '<br>' +
+                        '<pre>' + JSON.stringify(rooms.slice(0, 3), null, 2) + '</pre></div>';
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('rooms-result').innerHTML =
+                        '<div class="error">❌ Erreur ' + response.status + ': ' + errorText + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('rooms-result').innerHTML =
+                    '<div class="error">❌ Erreur: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+
+</html>

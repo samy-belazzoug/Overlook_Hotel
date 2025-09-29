@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Réservations - Overlook Hotel</title>
+    <meta name="description" content="Consultez et gérez vos réservations à l'Overlook Hotel.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/framework.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏨</text></svg>">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="flex items-center justify-between py-4">
+                <a href="index.html" class="navbar-brand">
+                    🏨 Overlook Hotel
+                </a>
+
+                <ul class="navbar-nav">
+                    <li><a href="index.html" class="navbar-link">Accueil</a></li>
+                    <li><a href="index.html#search" class="navbar-link">Rechercher</a></li>
+                    <li><a href="my-bookings.html" class="navbar-link active">Mes réservations</a></li>
+                    <li>
+                        <div id="auth-buttons" class="hidden">
+                            <button onclick="window.location.href='login.html'" class="btn btn-ghost">Connexion</button>
+                        </div>
+                        <div id="user-menu">
+                            <span id="user-name" class="text-gray-600"></span>
+                            <button onclick="logout()" class="btn btn-ghost btn-sm">Déconnexion</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-8">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">Mes Réservations</h1>
+                <p class="text-lg text-gray-600">Consultez et gérez vos réservations</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="text-center py-12">
+                <div class="spinner spinner-lg mx-auto mb-4"></div>
+                <p class="text-gray-600">Chargement de vos réservations...</p>
+            </div>
+
+            <!-- No Reservations -->
+            <div id="no-reservations" class="hidden text-center py-12">
+                <div class="text-6xl mb-4">📋</div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Aucune réservation</h3>
+                <p class="text-gray-600 mb-6">Vous n'avez pas encore de réservations</p>
+                <a href="index.html" class="btn btn-primary">Réserver une chambre</a>
+            </div>
+
+            <!-- Reservations List -->
+            <div id="reservations-list" class="space-y-6">
+                <!-- Reservations will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Cancel Confirmation Modal -->
+    <div id="cancelModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Annuler la réservation</h3>
+                <button class="modal-close" onclick="hideModal('cancelModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir annuler cette réservation ?</p>
+                <div id="reservation-details" class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <!-- Reservation details will be shown here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" onclick="hideModal('cancelModal')">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="confirmCancel()">Confirmer l'annulation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Overlook Hotel</h3>
+                    <p class="text-gray-400 mb-4">Votre destination de choix pour un séjour inoubliable dans le confort
+                        et l'élégance.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="index.html#search">Rechercher</a></li>
+                        <li><a href="my-bookings.html">Mes réservations</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li>📞 +33 1 23 45 67 89</li>
+                        <li>✉️ contact@overlook-hotel.com</li>
+                        <li>📍 123 Avenue des Champs, Paris</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center pt-8 border-t border-gray-700">
+                <p class="text-gray-400">&copy; 2025 Overlook Hotel. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/my-bookings.js"></script>
+</body>
+
+</html>

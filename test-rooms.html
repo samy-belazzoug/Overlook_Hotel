@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Dashboard Chambres</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🏨 Test Dashboard Chambres</h1>
+
+    <div class="test">
+        <h3>1. Test de chargement des chambres</h3>
+        <button onclick="loadRooms()">Charger les chambres</button>
+        <div id="rooms-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Test de création d'une chambre</h3>
+        <button onclick="createRoom()">Créer une chambre test</button>
+        <div id="create-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Test de mise à jour d'une chambre</h3>
+        <button onclick="updateRoom()">Mettre à jour une chambre</button>
+        <div id="update-result"></div>
+    </div>
+
+    <script>
+        let testRoomId = null;
+
+        async function loadRooms() {
+            try {
+                const response = await fetch('http://localhost:8080/api/rooms-test');
+                const rooms = await response.json();
+
+                let html = `<div class="success">✅ ${rooms.length} chambres chargées</div>`;
+                html += '<table><tr><th>ID</th><th>Numéro</th><th>Type</th><th>Prix</th><th>État</th></tr>';
+
+                // Afficher les 10 premières chambres
+                rooms.slice(0, 10).forEach(room => {
+                    html += `<tr>
+                        <td>${room.id}</td>
+                        <td>${room.numero}</td>
+                        <td>${room.type}</td>
+                        <td>${room.prix}€</td>
+                        <td>${room.etat}</td>
+                    </tr>`;
+                });
+
+                html += '</table>';
+                if (rooms.length > 10) {
+                    html += `<p>... et ${rooms.length - 10} autres chambres</p>`;
+                }
+
+                document.getElementById('rooms-result').innerHTML = html;
+
+                // Garder l'ID de la première chambre pour les tests
+                if (rooms.length > 0) {
+                    testRoomId = rooms[0].id;
+                }
+
+            } catch (error) {
+                document.getElementById('rooms-result').innerHTML =
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function createRoom() {
+            try {
+                const roomData = {
+                    numero: 'TEST-' + Date.now(),
+                    type: 'simple',
+                    prix: 99.99,
+                    etat: 'disponible'
+                };
+
+                const response = await fetch('http://localhost:8080/api/rooms-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(roomData)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    document.getElementById('create-result').innerHTML =
+                        `<div class="success">✅ Chambre créée: ${result.room.numero} (ID: ${result.room.id})</div>`;
+                    testRoomId = result.room.id;
+                } else {
+                    document.getElementById('create-result').innerHTML =
+                        `<div class="error">❌ Erreur: ${result.message}</div>`;
+                }
+
+            } catch (error) {
+                document.getElementById('create-result').innerHTML =
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function updateRoom() {
+            if (!testRoomId) {
+                document.getElementById('update-result').innerHTML =
+                    `<div class="error">❌ Aucune chambre de test disponible</div>`;
+                return;
+            }
+
+            try {
+                const roomData = {
+                    numero: 'UPDATED-' + Date.now(),
+                    type: 'double',
+                    prix: 149.99,
+                    etat: 'occupee'
+                };
+
+                const response = await fetch(`http://localhost:8080/api/rooms-test/${testRoomId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(roomData)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    document.getElementById('update-result').innerHTML =
+                        `<div class="success">✅ Chambre mise à jour: ${result.room.numero} (${result.room.type}, ${result.room.prix}€, ${result.room.etat})</div>`;
+                } else {
+                    document.getElementById('update-result').innerHTML =
+                        `<div class="error">❌ Erreur: ${result.message}</div>`;
+                }
+
+            } catch (error) {
+                document.getElementById('update-result').innerHTML =
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

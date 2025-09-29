@@ -1,5 +1,6 @@
 package com.overlook.gestion.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,6 +16,7 @@ public class Role {
     private String name; // CLIENT, EMPLOYE, MANAGER, ADMIN
 
     @ManyToMany(mappedBy = "roles")
+    @JsonBackReference
     private Set<User> users = new HashSet<>();
 
     // Getters & Setters

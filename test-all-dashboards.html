@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Tous les Dashboards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .test {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+        }
+
+        .dashboard-link {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .dashboard-link:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🏨 Test de Tous les Dashboards</h1>
+
+    <div class="test">
+        <h3>📊 Liens vers les Dashboards</h3>
+        <a href="frontend/admin/dashboard.html" class="dashboard-link" target="_blank">Dashboard Principal</a>
+        <a href="frontend/admin/rooms.html" class="dashboard-link" target="_blank">Dashboard Chambres</a>
+        <a href="frontend/index.html" class="dashboard-link" target="_blank">Page d'Accueil</a>
+        <a href="frontend/my-bookings.html" class="dashboard-link" target="_blank">Mes Réservations</a>
+    </div>
+
+    <div class="test">
+        <h3>🔧 Test des APIs Backend</h3>
+        <button onclick="testAllAPIs()">Tester toutes les APIs</button>
+        <div id="api-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>📈 Test des Statistiques Dashboard</h3>
+        <button onclick="testDashboardStats()">Tester les statistiques</button>
+        <div id="stats-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>🏠 Test des Chambres</h3>
+        <button onclick="testRooms()">Tester les chambres</button>
+        <div id="rooms-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>👥 Test des Utilisateurs</h3>
+        <button onclick="testUsers()">Tester les utilisateurs</button>
+        <div id="users-results"></div>
+    </div>
+
+    <div class="test">
+        <h3>📅 Test des Réservations</h3>
+        <button onclick="testReservations()">Tester les réservations</button>
+        <div id="reservations-results"></div>
+    </div>
+
+    <script>
+        async function testAllAPIs() {
+            const results = [];
+
+            try {
+                // Test Dashboard Stats
+                const statsResponse = await fetch('http://localhost:8080/api/dashboard-test/stats');
+                const stats = await statsResponse.json();
+                results.push(`✅ Dashboard Stats: ${stats.status}`);
+
+                // Test Rooms
+                const roomsResponse = await fetch('http://localhost:8080/api/rooms-test');
+                const rooms = await roomsResponse.json();
+                results.push(`✅ Chambres: ${rooms.length} trouvées`);
+
+                // Test Users
+                const usersResponse = await fetch('http://localhost:8080/api/users-test');
+                const users = await usersResponse.json();
+                results.push(`✅ Utilisateurs: ${users.length} trouvés`);
+
+                // Test Reservations
+                const reservationsResponse = await fetch('http://localhost:8080/api/reservations-test');
+                const reservations = await reservationsResponse.json();
+                results.push(`✅ Réservations: ${reservations.length} trouvées`);
+
+                document.getElementById('api-results').innerHTML =
+                    `<div class="success">${results.join('<br>')}</div>`;
+
+            } catch (error) {
+                document.getElementById('api-results').innerHTML =
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function testDashboardStats() {
+            try {
+                const response = await fetch('http://localhost:8080/api/dashboard-test/stats');
+                const stats = await response.json();
+
+                let html = '<div class="success">✅ Statistiques Dashboard:<br>';
+                html += `- Chambres totales: ${stats.totalRooms}<br>`;
+                html += `- Chambres disponibles: ${stats.availableRooms}<br>`;
+                html += `- Chambres occupées: ${stats.occupiedRooms}<br>`;
+                html += `- Réservations actives: ${stats.activeReservations}<br>`;
+                html += `- Utilisateurs: ${stats.totalUsers}<br>`;
+                html += `- Taux d'occupation: ${stats.occupancyRate}%</div>`;
+
+                document.getElementById('stats-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('stats-results').innerHTML =
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function testRooms() {
+            try {
+                const response = await fetch('http://localhost:8080/api/rooms-test');
+                const rooms = await response.json();
+
+                let html = `<div class="success">✅ ${rooms.length} chambres trouvées<br>`;
+
+                // Compter par type
+                const typeCount = {};
+                const statusCount = {};
+
+                rooms.forEach(room => {
+                    typeCount[room.type] = (typeCount[room.type] || 0) + 1;
+                    statusCount[room.etat] = (statusCount[room.etat] || 0) + 1;
+                });
+
+                html += '<strong>Par type:</strong><br>';
+                Object.entries(typeCount).forEach(([type, count]) => {
+                    html += `- ${type}: ${count}<br>`;
+                });
+
+                html += '<strong>Par statut:</strong><br>';
+                Object.entries(statusCount).forEach(([status, count]) => {
+                    html += `- ${status}: ${count}<br>`;
+                });
+
+                html += '</div>';
+
+                document.getElementById('rooms-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('rooms-results').innerHTML =
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function testUsers() {
+            try {
+                const response = await fetch('http://localhost:8080/api/users-test');
+                const users = await response.json();
+
+                let html = `<div class="success">✅ ${users.length} utilisateurs trouvés<br>`;
+
+                // Afficher les premiers utilisateurs
+                users.slice(0, 5).forEach(user => {
+                    html += `- ${user.username} (${user.email}) - Rôles: ${user.roles ? user.roles.length : 0}<br>`;
+                });
+
+                if (users.length > 5) {
+                    html += `... et ${users.length - 5} autres utilisateurs`;
+                }
+
+                html += '</div>';
+
+                document.getElementById('users-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('users-results').innerHTML =
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        async function testReservations() {
+            try {
+                const response = await fetch('http://localhost:8080/api/reservations-test');
+                const reservations = await response.json();
+
+                let html = `<div class="success">✅ ${reservations.length} réservations trouvées<br>`;
+
+                // Compter par statut
+                const statusCount = {};
+                reservations.forEach(reservation => {
+                    statusCount[reservation.statut] = (statusCount[reservation.statut] || 0) + 1;
+                });
+
+                html += '<strong>Par statut:</strong><br>';
+                Object.entries(statusCount).forEach(([status, count]) => {
+                    html += `- ${status}: ${count}<br>`;
+                });
+
+                html += '</div>';
+
+                document.getElementById('reservations-results').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('reservations-results').innerHTML =
+                    `<div class="error">❌ Erreur: ${error.message}</div>`;
+            }
+        }
+
+        // Test automatique au chargement
+        window.addEventListener('load', function () {
+            setTimeout(testAllAPIs, 1000);
+        });
+    </script>
+</body>
+
+</html>

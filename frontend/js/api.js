@@ -1,70 +1,219 @@
-const API_URL = "http://localhost:8080/api";
+// Overlook Hotel - API Client
+class HotelAPI {
+    constructor() {
+        // Détecter automatiquement l'URL de base selon l'environnement
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        this.baseURL = isLocalhost ? 'http://localhost:8080/api' : '/api';
+        this.token = localStorage.getItem('authToken');
+    }
 
-// GET helper
-async function apiGet(path) {
-    const response = await fetch(`${API_URL}${path}`);
-    if (!response.ok) throw new Error(`Erreur GET ${path}`);
-    return await response.json();
-}
+    // Set authentication token
+    setToken(token) {
+        this.token = token;
+        localStorage.setItem('authToken', token);
+    }
 
-// POST helper
-async function apiPost(path, data) {
-    const response = await fetch(`${API_URL}${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error(`Erreur POST ${path}`);
-    return await response.json();
-}
+    // Clear authentication token
+    clearToken() {
+        this.token = null;
+        localStorage.removeItem('authToken');
+    }
 
+    // Get headers for API requests
+    getHeaders() {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
 
-async function loadEvents() {
-    try {
-        const events = await apiGet(`/evenements`);
-        renderEvents(events);
-    } catch (error) {
-        console.error(error);
-        document.getElementById("events").innerHTML = "<p>Impossible de charger les événements.</p>";
+        if (this.token) {
+            headers['Authorization'] = `Bearer ${this.token}`;
+        }
+
+        return headers;
+    }
+
+    // Generic request method
+    async request(endpoint, options = {}) {
+        const url = `${this.baseURL}${endpoint}`;
+        const config = {
+            headers: this.getHeaders(),
+            ...options,
+        };
+
+        try {
+            const response = await fetch(url, config);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            // Handle empty responses
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            }
+
+            return null;
+        } catch (error) {
+            console.error('API Request failed:', error);
+            throw error;
+        }
+    }
+
+    // Authentication
+    async login(email, password) {
+        const response = await this.request('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+        });
+
+        if (response && response.token) {
+            this.setToken(response.token);
+        }
+
+        return response;
+    }
+
+    async logout() {
+        this.clearToken();
+    }
+
+    // Rooms
+    async getRooms() {
+        return await this.request('/rooms');
+    }
+
+    async searchRooms(filters = {}) {
+        const params = new URLSearchParams();
+
+        if (filters.checkIn) params.append('checkIn', filters.checkIn);
+        if (filters.checkOut) params.append('checkOut', filters.checkOut);
+        if (filters.minPrice) params.append('minPrice', filters.minPrice);
+        if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+        if (filters.type) params.append('type', filters.type);
+
+        const queryString = params.toString();
+        const endpoint = queryString ? `/rooms/search?${queryString}` : '/rooms';
+
+        return await this.request(endpoint);
+    }
+
+    async getRoom(id) {
+        return await this.request(`/rooms/${id}`);
+    }
+
+    // Reservations
+    async createReservation(reservationData) {
+        return await this.request('/reservations', {
+            method: 'POST',
+            body: JSON.stringify(reservationData),
+        });
+    }
+
+    async getMyReservations(clientId) {
+        return await this.request(`/reservations/my-reservations?clientId=${clientId}`);
+    }
+
+    async cancelReservation(id) {
+        return await this.request(`/reservations/${id}/cancel`, {
+            method: 'PUT',
+        });
+    }
+
+    // Admin functions
+    async getAdminRooms() {
+        return await this.request('/admin/rooms');
+    }
+
+    async createRoom(roomData) {
+        return await this.request('/admin/rooms', {
+            method: 'POST',
+            body: JSON.stringify(roomData),
+        });
+    }
+
+    async updateRoom(id, roomData) {
+        return await this.request(`/admin/rooms/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(roomData),
+        });
+    }
+
+    async deleteRoom(id) {
+        return await this.request(`/admin/rooms/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    async getAdminUsers() {
+        return await this.request('/admin/users');
+    }
+
+    async createUser(userData) {
+        return await this.request('/admin/users', {
+            method: 'POST',
+            body: JSON.stringify(userData),
+        });
+    }
+
+    async updateUser(id, userData) {
+        return await this.request(`/admin/users/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(userData),
+        });
+    }
+
+    async deleteUser(id) {
+        return await this.request(`/admin/users/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    async getAdminReservations() {
+        return await this.request('/admin/reservations');
+    }
+
+    async updateReservationStatus(id, status) {
+        return await this.request(`/admin/reservations/${id}/status?status=${status}`, {
+            method: 'PUT',
+        });
+    }
+
+    // Employee functions
+    async getMyShifts(employeeId) {
+        return await this.request(`/employee/shifts?employeeId=${employeeId}`);
+    }
+
+    async getShiftsByDate(date) {
+        return await this.request(`/employee/shifts/date?date=${date}`);
+    }
+
+    // Admin shift management
+    async getAdminShifts() {
+        return await this.request('/admin/shifts');
+    }
+
+    async createShift(shiftData) {
+        return await this.request('/admin/shifts', {
+            method: 'POST',
+            body: JSON.stringify(shiftData),
+        });
+    }
+
+    async updateShift(id, shiftData) {
+        return await this.request(`/admin/shifts/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(shiftData),
+        });
+    }
+
+    async deleteShift(id) {
+        return await this.request(`/admin/shifts/${id}`, {
+            method: 'DELETE',
+        });
     }
 }
 
-function renderEvents(events) {
-    const container = document.getElementById("events");
-    container.innerHTML = "";
-
-    if (events.length === 0) {
-        container.innerHTML = "<p>Aucun événement disponible.</p>";
-        return;
-    }
-
-    events.forEach(ev => {
-        const div = document.createElement("div");
-        div.className = "event";
-
-        div.innerHTML = `
-            <h3>${ev.titre}</h3>
-            <p>${ev.description}</p>
-            <p><b>Date:</b> ${ev.date}</p>
-            <p><b>Capacité:</b> ${ev.capacite}</p>
-            <button onclick="reserveEvent(${ev.id})">Réserver</button>
-        `;
-        container.appendChild(div);
-    });
-}
-
-async function reserveEvent(eventId) {
-    const clientId = prompt("Votre ID client ?");
-    if (!clientId) return;
-
-    try {
-        await apiPost(`/evenements/${eventId}/reserve?clientId=${clientId}`, {});
-        alert("Réservation réussie !");
-        loadEvents();
-    } catch (error) {
-        alert("Erreur: " + error.message);
-    }
-}
-
-// Charger les événements au démarrage
-loadEvents();
+// Create global API instance
+window.hotelAPI = new HotelAPI();

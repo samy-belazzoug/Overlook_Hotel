@@ -1,6 +1,7 @@
 package com.overlook.gestion.security;
 
 import com.overlook.gestion.domain.Gestionnaire;
+import com.overlook.gestion.domain.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,25 +10,38 @@ import java.util.Collection;
 import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
-    private final Gestionnaire gestionnaire;
+    private final Object user; // Peut être User ou Gestionnaire
+    private final String email;
+    private final String password;
+    private final String role;
+
+    public CustomUserDetails(User user) {
+        this.user = user;
+        this.email = user.getEmail();
+        this.password = user.getPassword();
+        this.role = user.getRoles().isEmpty() ? "CLIENT" : user.getRoles().iterator().next().getName();
+    }
 
     public CustomUserDetails(Gestionnaire gestionnaire) {
-        this.gestionnaire = gestionnaire;
+        this.user = gestionnaire;
+        this.email = gestionnaire.getEmail();
+        this.password = gestionnaire.getMotDePasse();
+        this.role = gestionnaire.getRole();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(gestionnaire.getRole().name()));
-}
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+    }
 
     @Override
     public String getPassword() {
-        return gestionnaire.getMotDePasse();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        return gestionnaire.getEmail();
+        return email;
     }
 
     @Override
