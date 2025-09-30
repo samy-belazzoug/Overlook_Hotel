@@ -16,8 +16,7 @@ public class Room {
     private String number;
     private String type;
     private Double price;
-    private String status; // available, occupied, cleaning, maintenance
-
+    private String status; 
     // Getters & Setters
     public Long getId() { return id; }
 

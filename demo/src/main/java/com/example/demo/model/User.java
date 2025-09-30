@@ -41,7 +41,7 @@ public class User {
     @Column(name = "points_fidelite")
     private Integer pointsFidelite = 0;
 
-    @ManyToMany(fetch = FetchType.EAGER) // ⚠️ pour charger les rôles avec l’utilisateur
+    @ManyToMany(fetch = FetchType.EAGER) 
     @JoinTable(
         name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"), 
